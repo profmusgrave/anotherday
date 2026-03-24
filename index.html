@@ -633,6 +633,8 @@ function scorePair(recent, older, daysToToday, daysToPast) {
   return (brimley * 5 * avgSalience) + (vibeGap * 1.5);
 }
 
+const recentHistory = [];
+const HISTORY_SIZE = 15;
 let currentCard = null;
 
 function generate() {
@@ -652,9 +654,18 @@ function generate() {
     }
   }
   allPairs.sort((a, b) => b.score - a.score);
-  const pool = allPairs.slice(0, Math.min(30, allPairs.length));
-  const r = pool[Math.floor(Math.random() * pool.length)];
+  const pool = allPairs.slice(0, Math.min(50, allPairs.length));
+
+  // Filter out recently shown pairs
+  const pairKey = p => p.recent.name + '|' + p.older.name;
+  let available = pool.filter(p => !recentHistory.includes(pairKey(p)));
+  if (available.length === 0) available = pool; // safety fallback
+
+  const r = available[Math.floor(Math.random() * available.length)];
   if (!r) return;
+
+  recentHistory.push(pairKey(r));
+  if (recentHistory.length > HISTORY_SIZE) recentHistory.shift();
 
   currentCard = r;
 
@@ -728,13 +739,10 @@ async function captureCard(W, H) {
   const MONO  = "'DM Mono', monospace";
 
   // ── Aspect-aware scaling ──
-  // Use the smaller dimension to drive text size so square formats
-  // get proportionally larger type, not just stretched-wide type.
-  const aspect = W / H;            // ~1.0 for square, ~1.78 for 16:9
+  const aspect = W / H;
   const isSquare = aspect < 1.2;
   const isWide   = aspect > 1.5;
 
-  // Base scale from width, boosted for taller canvases
   const S = W / 1200;
   const textBoost = isSquare ? 1.25 : isWide ? 1.0 : 1.1;
 
@@ -755,13 +763,9 @@ async function captureCard(W, H) {
     }
   }
 
-  // Horizontal padding — tighter on square to give text more room
   const PAD = Math.round((isSquare ? 64 : 80) * S);
   const CX = W / 2;
 
-  // ── Vertical layout zones (proportional to H) ──
-  // Square: title at 15%, main text centered 28-60%, bar area 65-80%, watermark bottom
-  // Wide:   title at 14%, main text centered 28-60%, bar area 64-78%, watermark bottom
   const titleY    = Math.round(H * (isSquare ? 0.15 : 0.14));
   const mainTop   = H * (isSquare ? 0.26 : 0.28);
   const mainZone  = H * (isSquare ? 0.36 : 0.32);
@@ -828,7 +832,6 @@ async function captureCard(W, H) {
   }
   if (lineChars.length) wrappedLines.push(lineChars);
 
-  // Center the main text block within its zone
   const blockH = wrappedLines.length * mainLineH;
   let startY = Math.round(mainTop + (mainZone - blockH) / 2);
 
@@ -845,7 +848,7 @@ async function captureCard(W, H) {
     startY += mainLineH;
   }
 
-  // ── Date line (just above the bar zone) ──
+  // ── Date line ──
   const metaSize = Math.round(16 * S * textBoost);
   const metaFont = `300 ${metaSize}px ${MONO}`;
   y = Math.round(barZoneY - metaSize * 2.5);
@@ -890,7 +893,6 @@ async function captureCard(W, H) {
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // Bar endpoint labels
   const labelSize = Math.round(14 * S * textBoost);
   ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "center";
@@ -949,12 +951,10 @@ async function copyForPlatform(btnEl, w, h, platformName) {
     await navigator.clipboard.write([
       new ClipboardItem({ "image/png": blob })
     ]);
-    // Visual feedback
     document.querySelectorAll('.copy-btn').forEach(b => b.classList.remove('copied'));
     btnEl.classList.add('copied');
     showToast(`${platformName} image copied — ${w}×${h}`);
   } catch (e) {
-    // Fallback: download the image instead
     try {
       const dataUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
@@ -995,9 +995,7 @@ function shareToBluesky() {
 }
 
 function shareToLinkedIn() {
-  // LinkedIn's share URL supports a url param; the text must be added manually
   window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SITE_URL)}`, "_blank");
-  // Copy the text so the user can paste it
   const text = getShareText() + "\n\nMore reminders of mortality at " + SITE_URL;
   navigator.clipboard.writeText(text).then(() => {
     showToast("Text copied — paste into your LinkedIn post");
