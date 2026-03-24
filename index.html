@@ -137,6 +137,7 @@
 
   .card-gap span:last-child { color: var(--accent); opacity: 0.7; }
 
+  /* ── Action rows ── */
   .btn-row {
     display: flex;
     gap: 12px;
@@ -146,7 +147,7 @@
     animation: fadeIn 0.5s ease 1s both;
   }
 
-  .another-btn, .share-btn {
+  .another-btn {
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -163,167 +164,96 @@
     transition: color 0.2s, border-color 0.2s;
   }
 
-  .another-btn:hover, .share-btn:hover {
+  .another-btn:hover {
     color: var(--accent);
     border-color: var(--accent);
   }
 
-  .share-btn svg {
-    width: 14px;
-    height: 14px;
+  /* ── Copy image buttons ── */
+  .copy-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1.1s both;
+  }
+
+  .copy-row-label {
+    width: 100%;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 4px;
+    opacity: 0.6;
+  }
+
+  .copy-btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+    color: var(--dim);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.25s, border-color 0.25s, background 0.25s;
+    position: relative;
+    min-width: 80px;
+  }
+
+  .copy-btn:hover {
+    color: var(--fg);
+    border-color: #333;
+    background: #111114;
+  }
+
+  .copy-btn:active {
+    transform: scale(0.97);
+  }
+
+  .copy-btn .platform-name {
+    font-size: 0.65rem;
+    letter-spacing: 0.02em;
+  }
+
+  .copy-btn .platform-size {
+    font-size: 0.5rem;
+    opacity: 0.5;
+  }
+
+  .copy-btn svg {
+    width: 16px;
+    height: 16px;
     stroke: currentColor;
     fill: none;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
+    opacity: 0.5;
+    transition: opacity 0.2s;
   }
 
-  /* ── Share Modal ── */
-  .share-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
+  .copy-btn:hover svg { opacity: 0.8; }
+
+  .copy-btn.copied {
+    color: var(--accent);
+    border-color: var(--accent);
   }
 
-  .share-overlay.open {
+  .copy-btn.copied svg {
     opacity: 1;
-    pointer-events: all;
+    stroke: var(--accent);
   }
 
-  .share-modal {
-    background: #131316;
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    padding: 28px 32px;
-    max-width: 400px;
-    width: calc(100% - 48px);
-    transform: translateY(16px) scale(0.97);
-    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .share-overlay.open .share-modal {
-    transform: translateY(0) scale(1);
-  }
-
-  .share-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-
-  .share-modal-title {
-    font-family: 'Instrument Serif', serif;
-    font-size: 1.2rem;
-    color: var(--fg);
-  }
-
-  .share-close-btn {
-    background: none;
-    border: none;
-    color: var(--dim);
-    cursor: pointer;
-    padding: 4px;
-    transition: color 0.2s;
-    line-height: 0;
-  }
-
-  .share-close-btn:hover { color: var(--fg); }
-
-  .share-close-btn svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-  }
-
-  .share-preview {
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    border: 1px solid var(--card-border);
-  }
-
-  .share-preview img {
-    width: 100%;
-    display: block;
-  }
-
-  .share-preview-loading {
-    height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--dim);
-    font-size: 0.65rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .share-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .share-action-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 12px 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.04em;
-    color: var(--fg);
-    background: #1a1a1f;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    text-align: left;
-  }
-
-  .share-action-btn:hover {
-    border-color: var(--card-border);
-    background: #1f1f24;
-  }
-
-  .share-action-btn .share-icon {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .share-action-btn .share-icon svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .share-action-btn .share-label {
-    flex: 1;
-  }
-
-  .share-action-btn .share-hint {
-    font-size: 0.55rem;
-    color: var(--dim);
-    letter-spacing: 0.02em;
-  }
-
+  /* ── Toast ── */
   .share-toast {
     position: fixed;
     bottom: 24px;
@@ -382,7 +312,7 @@
 
   @media (max-width: 600px) {
     .container { padding: 24px; }
-    .share-modal { padding: 20px 24px; }
+    .copy-btn { min-width: 70px; padding: 7px 10px; }
   }
 </style>
 </head>
@@ -394,53 +324,32 @@
   <div id="card"></div>
   <div class="btn-row">
     <button class="another-btn" onclick="generate()">Another</button>
-    <button class="share-btn" onclick="openShare()">
-      <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-      Share
+  </div>
+  <div class="copy-row">
+    <div class="copy-row-label">Copy image for</div>
+    <button class="copy-btn" onclick="copyForPlatform(this, 1080, 1080, 'Instagram')" title="1080 × 1080">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      <span class="platform-name">Instagram</span>
+      <span class="platform-size">1080 × 1080</span>
+    </button>
+    <button class="copy-btn" onclick="copyForPlatform(this, 1600, 900, 'X / Twitter')" title="1600 × 900">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      <span class="platform-name">X</span>
+      <span class="platform-size">1600 × 900</span>
+    </button>
+    <button class="copy-btn" onclick="copyForPlatform(this, 1200, 627, 'LinkedIn')" title="1200 × 627">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      <span class="platform-name">LinkedIn</span>
+      <span class="platform-size">1200 × 627</span>
+    </button>
+    <button class="copy-btn" onclick="copyForPlatform(this, 1200, 630, 'Bluesky')" title="1200 × 630">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      <span class="platform-name">Bluesky</span>
+      <span class="platform-size">1200 × 630</span>
     </button>
   </div>
   <div class="credit">
     by <a href="https://www.paulmusgrave.info" target="_blank">Paul Musgrave</a> · <a href="https://bsky.app/profile/professormusgrave.bsky.social" target="_blank">@professormusgrave.bsky.social</a>
-  </div>
-</div>
-<div class="share-overlay" id="shareOverlay" onclick="closeShareOutside(event)">
-  <div class="share-modal">
-    <div class="share-modal-header">
-      <span class="share-modal-title">Share this</span>
-      <button class="share-close-btn" onclick="closeShare()">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="share-preview" id="sharePreview">
-      <div class="share-preview-loading">Capturing...</div>
-    </div>
-    <div class="share-actions">
-      <button class="share-action-btn" onclick="shareToBluesky()">
-        <span class="share-icon"><svg viewBox="0 0 600 530" fill="var(--fg)"><path d="M135.72 44.03C202.216 93.951 273.74 195.17 300 249.49c26.262-54.316 97.782-155.54 164.28-205.46C512.26 8.009 590-19.862 590 68.825c0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.38-3.69-10.832-3.708-7.896-.017-2.935-1.193.516-3.707 7.896-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.256 82.697-152.22-67.108 11.421-142.55-7.449-163.25-81.433C20.15 217.613 10 86.536 10 68.824c0-88.687 77.742-60.816 125.72-24.795z"/></svg></span>
-        <span class="share-label">Bluesky</span>
-        <span class="share-hint">opens compose</span>
-      </button>
-      <button class="share-action-btn" onclick="shareToLinkedIn()">
-        <span class="share-icon"><svg viewBox="0 0 24 24" fill="var(--fg)"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></span>
-        <span class="share-label">LinkedIn</span>
-        <span class="share-hint">opens compose</span>
-      </button>
-      <button class="share-action-btn" onclick="shareToInstagram()">
-        <span class="share-icon"><svg viewBox="0 0 24 24" fill="var(--fg)"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></span>
-        <span class="share-label">Instagram</span>
-        <span class="share-hint">saves image</span>
-      </button>
-      <button class="share-action-btn" onclick="copyImage()">
-        <span class="share-icon"><svg viewBox="0 0 24 24" stroke="var(--fg)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span>
-        <span class="share-label">Copy image</span>
-        <span class="share-hint">to clipboard</span>
-      </button>
-      <button class="share-action-btn" onclick="downloadImage()">
-        <span class="share-icon"><svg viewBox="0 0 24 24" stroke="var(--fg)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
-        <span class="share-label">Save image</span>
-        <span class="share-hint">download .png</span>
-      </button>
-    </div>
   </div>
 </div>
 
@@ -659,7 +568,6 @@ function scorePair(recent, older, daysToToday, daysToPast) {
   return (brimley * 5 * avgSalience) + (vibeGap * 1.5) + (catDist * 1.0);
 }
 
-// Store current card data for sharing text
 let currentCard = null;
 
 function generate() {
@@ -715,6 +623,9 @@ function generate() {
     </div>
   `;
 
+  // Reset copied state on all buttons
+  document.querySelectorAll('.copy-btn').forEach(b => b.classList.remove('copied'));
+
   requestAnimationFrame(() => {
     const fill = el.querySelector(".bar-fill");
     if (fill) {
@@ -725,26 +636,14 @@ function generate() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// SHARE FUNCTIONALITY
+// CANVAS CAPTURE (adaptive dimensions)
 // ──────────────────────────────────────────────────────────────
 
-let capturedBlob = null;
-let capturedDataUrl = null;
-
-function getShareText() {
-  if (!currentCard) return "One day closer to the end.";
-  const r = currentCard;
-  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-  const verb = r.recent.plural ? "are" : "is";
-  return `${cap(r.recent.name)} ${verb} now closer to ${r.older.name} than to today.`;
-}
-
-async function captureCard() {
+async function captureCard(W, H) {
+  await document.fonts.ready;
   if (!currentCard) return null;
   const r = currentCard;
 
-  // ── Canvas setup: 1200×630 (OG image ratio) ──
-  const W = 1200, H = 630;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -759,87 +658,57 @@ async function captureCard() {
   const TRACK   = "#1a1a1f";
   const WMARK   = "#3a3630";
 
-  // ── Fonts (already loaded by page) ──
+  // ── Fonts ──
   const SERIF = "'Instrument Serif', serif";
   const MONO  = "'DM Mono', monospace";
+
+  // ── Scale factor relative to 1200-wide baseline ──
+  const S = W / 1200;
 
   // ── Background ──
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, W, H);
 
-  // ── Helper: word-wrap ──
-  function wrapText(text, maxWidth, font) {
-    ctx.font = font;
-    const words = text.split(" ");
-    const lines = [];
-    let line = "";
-    for (const word of words) {
-      const test = line ? line + " " + word : word;
-      if (ctx.measureText(test).width > maxWidth && line) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = test;
-      }
-    }
-    if (line) lines.push(line);
-    return lines;
-  }
-
-  // ── Helper: draw colored segments on one line ──
-  // segments: [{ text, color }]
+  // ── Helpers ──
   function drawSegments(segments, x, y, font, align) {
     ctx.font = font;
-    // measure total width for centering
     let totalW = 0;
-    for (const s of segments) {
-      ctx.font = font;
-      totalW += ctx.measureText(s.text).width;
-    }
+    for (const s of segments) { totalW += ctx.measureText(s.text).width; }
     let curX = align === "center" ? x - totalW / 2 : x;
     for (const s of segments) {
       ctx.fillStyle = s.color;
-      ctx.font = font;
       ctx.fillText(s.text, curX, y);
       curX += ctx.measureText(s.text).width;
     }
   }
 
-  const PAD = 80;
+  const PAD = 80 * S;
   const CX = W / 2;
-  let y = 0;
 
   // ── Title ──
-  y = 90;
-  ctx.font = `400 28px ${SERIF}`;
+  const titleSize = Math.round(28 * S);
+  let y = Math.round(H * 0.14);
+  ctx.font = `400 ${titleSize}px ${SERIF}`;
   ctx.fillStyle = DIM;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("One day closer to the end.", CX, y);
 
-  // ── Main text (multi-color, word-wrapped) ──
+  // ── Main text ──
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   const verb = r.recent.plural ? "are" : "is";
-  const fullText = `${cap(r.recent.name)} ${verb} now closer to ${r.older.name} than to today.`;
-  const mainFont = `400 38px ${SERIF}`;
-  const mainLineH = 52;
-  const lines = wrapText(fullText, W - PAD * 2, mainFont);
+  const mainSize = Math.round(38 * S);
+  const mainFont = `400 ${mainSize}px ${SERIF}`;
+  const mainLineH = Math.round(52 * S);
+  const maxLineW = W - PAD * 2;
 
-  y = 180;
-  // For each wrapped line, color the segments
-  const recentText = cap(r.recent.name);
-  const olderText = r.older.name;
-  ctx.textAlign = "left"; // we'll center manually
-
-  // Build a flat string → color map
   const parts = [
-    { text: recentText, color: FG },
+    { text: cap(r.recent.name), color: FG },
     { text: ` ${verb} now closer to `, color: DIM },
-    { text: olderText, color: ACCENT },
+    { text: r.older.name, color: ACCENT },
     { text: " than to today.", color: DIM },
   ];
 
-  // Flatten into character-level coloring, then draw per-line
   let charColors = [];
   for (const p of parts) {
     for (const ch of p.text) {
@@ -847,24 +716,20 @@ async function captureCard() {
     }
   }
 
-  // Re-wrap using character array
   ctx.font = mainFont;
   const wrappedLines = [];
   let lineChars = [];
   let lineWidth = 0;
-  const maxLineW = W - PAD * 2;
 
   for (let i = 0; i < charColors.length; i++) {
     const c = charColors[i];
     const cw = ctx.measureText(c.ch).width;
-    // Try to break at spaces
     if (lineWidth + cw > maxLineW && lineChars.length > 0) {
-      // Walk back to last space
       let breakIdx = lineChars.length - 1;
       while (breakIdx > 0 && lineChars[breakIdx].ch !== " ") breakIdx--;
       if (breakIdx > 0) {
         const kept = lineChars.slice(0, breakIdx);
-        const overflow = lineChars.slice(breakIdx + 1); // skip the space
+        const overflow = lineChars.slice(breakIdx + 1);
         wrappedLines.push(kept);
         lineChars = [...overflow, c];
         lineWidth = lineChars.reduce((s, cc) => s + ctx.measureText(cc.ch).width, 0);
@@ -880,12 +745,12 @@ async function captureCard() {
   }
   if (lineChars.length) wrappedLines.push(lineChars);
 
-  // Center the block vertically a bit
+  // Center the main text block vertically
   const blockH = wrappedLines.length * mainLineH;
-  let startY = y;
+  let startY = Math.round(H * 0.28) + (H * 0.32 - blockH) / 2;
 
+  ctx.textAlign = "left";
   for (const wl of wrappedLines) {
-    // Measure line total width
     let lw = 0;
     for (const c of wl) lw += ctx.measureText(c.ch).width;
     let lx = CX - lw / 2;
@@ -898,38 +763,30 @@ async function captureCard() {
   }
 
   // ── Date line ──
-  y = startY + 30;
-  const dateFont = `300 16px ${MONO}`;
-  const dateLine = `${fmtDate(r.older.date)}  →  ${fmtDate(r.recent.date)}  →  Today`;
-  ctx.font = dateFont;
+  const dateSize = Math.round(16 * S);
+  const dateFont = `300 ${dateSize}px ${MONO}`;
+  y = startY + Math.round(30 * S);
   ctx.textAlign = "center";
-
-  // Draw with the recent date highlighted
-  const dOlder = fmtDate(r.older.date) + "  →  ";
-  const dRecent = fmtDate(r.recent.date);
-  const dEnd = "  →  Today";
   const dSegs = [
-    { text: dOlder, color: DIM },
-    { text: dRecent, color: FG },
-    { text: dEnd, color: DIM },
+    { text: fmtDate(r.older.date) + "  →  ", color: DIM },
+    { text: fmtDate(r.recent.date), color: FG },
+    { text: "  →  Today", color: DIM },
   ];
   drawSegments(dSegs, CX, y, dateFont, "center");
 
   // ── Progress bar ──
-  y += 44;
-  const barX = PAD + 60;
-  const barW = W - PAD * 2 - 120;
-  const barH = 10;
-  const barR = 5;
+  y += Math.round(44 * S);
+  const barX = PAD + Math.round(60 * S);
+  const barW = W - PAD * 2 - Math.round(120 * S);
+  const barH = Math.round(10 * S);
+  const barR = Math.round(5 * S);
   const pct = r.daysToPast / (r.daysToPast + r.daysToToday);
 
-  // Track
   ctx.fillStyle = TRACK;
   ctx.beginPath();
   ctx.roundRect(barX, y - barH / 2, barW, barH, barR);
   ctx.fill();
 
-  // Fill gradient
   const grad = ctx.createLinearGradient(barX, 0, barX + barW * pct, 0);
   grad.addColorStop(0, ACCENT);
   grad.addColorStop(1, ACCENT2);
@@ -938,73 +795,48 @@ async function captureCard() {
   ctx.roundRect(barX, y - barH / 2, barW * pct, barH, barR);
   ctx.fill();
 
-  // Midpoint marker
   const midX = barX + barW * 0.5;
   ctx.strokeStyle = DIM;
   ctx.globalAlpha = 0.4;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(midX, y - 14);
-  ctx.lineTo(midX, y + 14);
+  ctx.moveTo(midX, y - Math.round(14 * S));
+  ctx.lineTo(midX, y + Math.round(14 * S));
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // Bar labels
-  ctx.font = `300 14px ${MONO}`;
+  const labelSize = Math.round(14 * S);
+  ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "center";
   ctx.fillStyle = DIM;
-  ctx.fillText(fmtBarLabel(r.older.date), PAD + 28, y + 5);
+  ctx.fillText(fmtBarLabel(r.older.date), PAD + Math.round(28 * S), y + Math.round(5 * S));
   ctx.fillStyle = ACCENT;
-  ctx.fillText("Now", W - PAD - 28, y + 5);
+  ctx.fillText("Now", W - PAD - Math.round(28 * S), y + Math.round(5 * S));
 
   // ── Gap durations ──
-  y += 40;
-  ctx.font = `300 14px ${MONO}`;
+  y += Math.round(40 * S);
+  ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "left";
   ctx.fillStyle = DIM;
-  ctx.fillText(`${fmtDuration(r.daysToPast)} to past event`, PAD + 10, y);
+  ctx.fillText(`${fmtDuration(r.daysToPast)} to past event`, PAD + Math.round(10 * S), y);
   ctx.textAlign = "right";
   ctx.fillStyle = ACCENT;
   ctx.globalAlpha = 0.7;
-  ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - 10, y);
+  ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - Math.round(10 * S), y);
   ctx.globalAlpha = 1;
 
   // ── Watermark ──
-  ctx.font = `300 14px ${MONO}`;
+  ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "center";
   ctx.fillStyle = WMARK;
-  ctx.fillText("profmusgrave.github.io/anotherday", CX, H - 32);
+  ctx.fillText("profmusgrave.github.io/anotherday", CX, H - Math.round(32 * S));
 
-  // ── Export ──
-  capturedDataUrl = canvas.toDataURL("image/png");
-  capturedBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-  return capturedDataUrl;
+  return canvas;
 }
 
-async function openShare() {
-  const overlay = document.getElementById("shareOverlay");
-  const preview = document.getElementById("sharePreview");
-
-  // Show modal immediately with loading state
-  preview.innerHTML = `<div class="share-preview-loading">Capturing...</div>`;
-  overlay.classList.add("open");
-
-  // Capture the card
-  const dataUrl = await captureCard();
-  if (dataUrl) {
-    preview.innerHTML = `<img src="${dataUrl}" alt="Card preview">`;
-  } else {
-    preview.innerHTML = `<div class="share-preview-loading">Capture failed — try again</div>`;
-  }
-}
-
-function closeShare() {
-  document.getElementById("shareOverlay").classList.remove("open");
-}
-
-function closeShareOutside(e) {
-  if (e.target === e.currentTarget) closeShare();
-}
+// ──────────────────────────────────────────────────────────────
+// COPY IMAGE FOR PLATFORM
+// ──────────────────────────────────────────────────────────────
 
 function showToast(msg) {
   const toast = document.getElementById("shareToast");
@@ -1014,97 +846,43 @@ function showToast(msg) {
   toast._timer = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
-async function nativeShare(text) {
-  if (!navigator.share || !capturedBlob) return false;
-  try {
-    const file = new File([capturedBlob], "one-day-closer.png", { type: "image/png" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ text, files: [file] });
-      return true;
-    }
-    // Try text-only share
-    await navigator.share({ text, url: "https://profmusgrave.github.io/anotherday/" });
-    return true;
-  } catch (e) {
-    if (e.name === "AbortError") return true; // user cancelled, still counts
-    return false;
-  }
-}
-
-async function shareToBluesky() {
-  const text = getShareText() + "\n\nprofmusgrave.github.io/anotherday";
-  if (await nativeShare(text)) return;
-  const url = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
-  window.open(url, "_blank");
-  showToast("Opened Bluesky — paste the image from clipboard or downloads");
-  tryCopyImage();
-}
-
-async function shareToLinkedIn() {
-  const text = getShareText();
-  if (await nativeShare(text)) return;
-  window.open(`https://www.linkedin.com/feed/?shareActive=true`, "_blank");
-  showToast("Opened LinkedIn — paste the image and text");
-  tryCopyImage();
-}
-
-async function shareToInstagram() {
-  const text = getShareText();
-  if (await nativeShare(text)) return;
-  downloadImage();
-  showToast("Image saved — open Instagram and share from your gallery");
-}
-
-async function tryCopyImage() {
-  if (!capturedBlob) return;
-  try {
-    await navigator.clipboard.write([
-      new ClipboardItem({ "image/png": capturedBlob })
-    ]);
-  } catch (e) {
-    // Clipboard write not supported — that's okay
-  }
-}
-
-async function copyImage() {
-  if (!capturedBlob) {
-    showToast("No image captured yet");
+async function copyForPlatform(btnEl, w, h, platformName) {
+  if (!currentCard) {
+    showToast("Generate a card first");
     return;
   }
+
+  const canvas = await captureCard(w, h);
+  if (!canvas) {
+    showToast("Capture failed — try again");
+    return;
+  }
+
   try {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
     await navigator.clipboard.write([
-      new ClipboardItem({ "image/png": capturedBlob })
+      new ClipboardItem({ "image/png": blob })
     ]);
-    showToast("Image copied to clipboard");
+    // Visual feedback
+    document.querySelectorAll('.copy-btn').forEach(b => b.classList.remove('copied'));
+    btnEl.classList.add('copied');
+    showToast(`${platformName} image copied — ${w}×${h}`);
   } catch (e) {
-    // Fallback: copy the share text
+    // Fallback: download the image instead
     try {
-      await navigator.clipboard.writeText(getShareText());
-      showToast("Text copied — image copy not supported in this browser");
+      const dataUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `one-day-closer-${w}x${h}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast(`Clipboard unavailable — saved ${w}×${h} image`);
     } catch (e2) {
-      showToast("Copy not available — try saving instead");
+      showToast("Copy not available in this browser");
     }
   }
 }
-
-function downloadImage() {
-  if (!capturedDataUrl) {
-    showToast("No image captured yet");
-    return;
-  }
-  const a = document.createElement("a");
-  a.href = capturedDataUrl;
-  a.download = "one-day-closer.png";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  showToast("Image saved");
-}
-
-// ── Keyboard: Escape to close modal ──
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") closeShare();
-});
 
 generate();
 </script>
