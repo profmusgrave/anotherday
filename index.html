@@ -350,6 +350,27 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  .credit {
+    margin-top: 28px;
+    font-size: 0.55rem;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1.2s both;
+  }
+
+  .credit a {
+    color: var(--dim);
+    text-decoration: none;
+    border-bottom: 1px solid #2a2a2e;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .credit a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(24px); }
     to { opacity: 1; transform: translateY(0); }
@@ -379,9 +400,10 @@
       Share
     </button>
   </div>
+  <div class="credit">
+    by <a href="https://www.paulmusgrave.info" target="_blank">Paul Musgrave</a> · <a href="https://bsky.app/profile/professormusgrave.bsky.social" target="_blank">@professormusgrave.bsky.social</a>
+  </div>
 </div>
-
-<!-- Share Modal -->
 <div class="share-overlay" id="shareOverlay" onclick="closeShareOutside(event)">
   <div class="share-modal">
     <div class="share-modal-header">
@@ -760,6 +782,17 @@ async function captureCard() {
   }
   wrapper.appendChild(clone);
 
+  // URL watermark
+  const watermark = document.createElement("div");
+  watermark.style.cssText = `
+    margin-top: 28px; text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; color: #4a4640;
+    letter-spacing: 0.04em;
+  `;
+  watermark.textContent = "profmusgrave.github.io/anotherday";
+  wrapper.appendChild(watermark);
+
   document.body.appendChild(wrapper);
 
   try {
@@ -815,27 +848,43 @@ function showToast(msg) {
   toast._timer = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
-function shareToBluesky() {
-  const text = getShareText();
+async function nativeShare(text) {
+  if (!navigator.share || !capturedBlob) return false;
+  try {
+    const file = new File([capturedBlob], "one-day-closer.png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ text, files: [file] });
+      return true;
+    }
+    // Try text-only share
+    await navigator.share({ text, url: "https://profmusgrave.github.io/anotherday/" });
+    return true;
+  } catch (e) {
+    if (e.name === "AbortError") return true; // user cancelled, still counts
+    return false;
+  }
+}
+
+async function shareToBluesky() {
+  const text = getShareText() + "\n\nprofmusgrave.github.io/anotherday";
+  if (await nativeShare(text)) return;
   const url = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
   window.open(url, "_blank");
   showToast("Opened Bluesky — paste the image from clipboard or downloads");
-  // Also try to copy image
   tryCopyImage();
 }
 
-function shareToLinkedIn() {
+async function shareToLinkedIn() {
   const text = getShareText();
-  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("data:text/plain," + text)}`;
-  // LinkedIn's share URL is limited — open the feed compose instead
+  if (await nativeShare(text)) return;
   window.open(`https://www.linkedin.com/feed/?shareActive=true`, "_blank");
   showToast("Opened LinkedIn — paste the image and text");
-  // Copy both text and image
   tryCopyImage();
 }
 
-function shareToInstagram() {
-  // Instagram requires native app — best we can do is download
+async function shareToInstagram() {
+  const text = getShareText();
+  if (await nativeShare(text)) return;
   downloadImage();
   showToast("Image saved — open Instagram and share from your gallery");
 }
