@@ -253,6 +253,51 @@
     stroke: var(--accent);
   }
 
+  /* ── Share text buttons ── */
+  .share-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1.2s both;
+  }
+
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    color: var(--dim);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.25s, border-color 0.25s, background 0.25s;
+  }
+
+  .share-btn:hover {
+    color: var(--fg);
+    border-color: #333;
+    background: #111114;
+  }
+
+  .share-btn:active { transform: scale(0.97); }
+
+  .share-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  .share-btn:hover svg { opacity: 1; }
+
   /* ── Toast ── */
   .share-toast {
     position: fixed;
@@ -285,7 +330,7 @@
     color: var(--dim);
     letter-spacing: 0.04em;
     opacity: 0;
-    animation: fadeIn 0.5s ease 1.2s both;
+    animation: fadeIn 0.5s ease 1.4s both;
   }
 
   .credit a {
@@ -348,7 +393,21 @@
       <span class="platform-size">1200 × 630</span>
     </button>
   </div>
-  <div class="credit">
+  <div class="share-row">
+    <div class="copy-row-label">Share text to</div>
+    <button class="share-btn" onclick="shareToX()">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      <span class="platform-name">X</span>
+    </button>
+    <button class="share-btn" onclick="shareToBluesky()">
+      <svg viewBox="0 0 600 530" fill="currentColor" stroke="none"><path d="M135.72 44.03C202.216 93.951 273.74 195.17 300 249.49c26.262-54.316 97.782-155.54 164.28-205.46C512.26 8.009 590-19.862 590 68.825c0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.38-3.69-10.832-3.708-7.896-.017-2.935-1.193.516-3.707 7.896-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.256 82.697-152.22-67.108 11.421-142.55-7.449-163.25-81.433C20.15 217.613 10 86.536 10 68.824c0-88.687 77.742-60.816 125.72-24.795z"/></svg>
+      <span class="platform-name">Bluesky</span>
+    </button>
+    <button class="share-btn" onclick="shareToLinkedIn()">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      <span class="platform-name">LinkedIn</span>
+    </button>
+  </div>
     by <a href="https://www.paulmusgrave.info" target="_blank">Paul Musgrave</a> · <a href="https://bsky.app/profile/professormusgrave.bsky.social" target="_blank">@professormusgrave.bsky.social</a>
   </div>
 </div>
@@ -563,9 +622,8 @@ function scorePair(recent, older, daysToToday, daysToPast) {
   const position = daysToPast / (daysToPast + daysToToday);
   const brimley  = brimleyScore(position);
   const vibeGap = Math.max(0, recent.vibe - older.vibe);
-  const catDist = catDistance(recent.cat, older.cat);
   const avgSalience = (recent.salience + older.salience) / 2;
-  return (brimley * 5 * avgSalience) + (vibeGap * 1.5) + (catDist * 1.0);
+  return (brimley * 5 * avgSalience) + (vibeGap * 1.5);
 }
 
 let currentCard = null;
@@ -662,8 +720,16 @@ async function captureCard(W, H) {
   const SERIF = "'Instrument Serif', serif";
   const MONO  = "'DM Mono', monospace";
 
-  // ── Scale factor relative to 1200-wide baseline ──
+  // ── Aspect-aware scaling ──
+  // Use the smaller dimension to drive text size so square formats
+  // get proportionally larger type, not just stretched-wide type.
+  const aspect = W / H;            // ~1.0 for square, ~1.78 for 16:9
+  const isSquare = aspect < 1.2;
+  const isWide   = aspect > 1.5;
+
+  // Base scale from width, boosted for taller canvases
   const S = W / 1200;
+  const textBoost = isSquare ? 1.25 : isWide ? 1.0 : 1.1;
 
   // ── Background ──
   ctx.fillStyle = BG;
@@ -682,24 +748,34 @@ async function captureCard(W, H) {
     }
   }
 
-  const PAD = 80 * S;
+  // Horizontal padding — tighter on square to give text more room
+  const PAD = Math.round((isSquare ? 64 : 80) * S);
   const CX = W / 2;
 
+  // ── Vertical layout zones (proportional to H) ──
+  // Square: title at 15%, main text centered 28-60%, bar area 65-80%, watermark bottom
+  // Wide:   title at 14%, main text centered 28-60%, bar area 64-78%, watermark bottom
+  const titleY    = Math.round(H * (isSquare ? 0.15 : 0.14));
+  const mainTop   = H * (isSquare ? 0.26 : 0.28);
+  const mainZone  = H * (isSquare ? 0.36 : 0.32);
+  const barZoneY  = H * (isSquare ? 0.70 : 0.68);
+  const wmY       = H - Math.round((isSquare ? 48 : 32) * S);
+
   // ── Title ──
-  const titleSize = Math.round(28 * S);
-  let y = Math.round(H * 0.14);
+  const titleSize = Math.round(28 * S * textBoost);
+  let y = titleY;
   ctx.font = `400 ${titleSize}px ${SERIF}`;
   ctx.fillStyle = DIM;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("One day closer to the end.", CX, y);
 
-  // ── Main text ──
+  // ── Main text (multi-color, word-wrapped) ──
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   const verb = r.recent.plural ? "are" : "is";
-  const mainSize = Math.round(38 * S);
+  const mainSize = Math.round(38 * S * textBoost);
   const mainFont = `400 ${mainSize}px ${SERIF}`;
-  const mainLineH = Math.round(52 * S);
+  const mainLineH = Math.round(52 * S * textBoost);
   const maxLineW = W - PAD * 2;
 
   const parts = [
@@ -745,9 +821,9 @@ async function captureCard(W, H) {
   }
   if (lineChars.length) wrappedLines.push(lineChars);
 
-  // Center the main text block vertically
+  // Center the main text block within its zone
   const blockH = wrappedLines.length * mainLineH;
-  let startY = Math.round(H * 0.28) + (H * 0.32 - blockH) / 2;
+  let startY = Math.round(mainTop + (mainZone - blockH) / 2);
 
   ctx.textAlign = "left";
   for (const wl of wrappedLines) {
@@ -762,24 +838,25 @@ async function captureCard(W, H) {
     startY += mainLineH;
   }
 
-  // ── Date line ──
-  const dateSize = Math.round(16 * S);
-  const dateFont = `300 ${dateSize}px ${MONO}`;
-  y = startY + Math.round(30 * S);
+  // ── Date line (just above the bar zone) ──
+  const metaSize = Math.round(16 * S * textBoost);
+  const metaFont = `300 ${metaSize}px ${MONO}`;
+  y = Math.round(barZoneY - metaSize * 2.5);
   ctx.textAlign = "center";
   const dSegs = [
     { text: fmtDate(r.older.date) + "  →  ", color: DIM },
     { text: fmtDate(r.recent.date), color: FG },
     { text: "  →  Today", color: DIM },
   ];
-  drawSegments(dSegs, CX, y, dateFont, "center");
+  drawSegments(dSegs, CX, y, metaFont, "center");
 
   // ── Progress bar ──
-  y += Math.round(44 * S);
-  const barX = PAD + Math.round(60 * S);
-  const barW = W - PAD * 2 - Math.round(120 * S);
-  const barH = Math.round(10 * S);
-  const barR = Math.round(5 * S);
+  y = Math.round(barZoneY);
+  const barInset = Math.round(60 * S);
+  const barX = PAD + barInset;
+  const barW = W - PAD * 2 - barInset * 2;
+  const barH = Math.round((isSquare ? 12 : 10) * S);
+  const barR = Math.round(barH / 2);
   const pct = r.daysToPast / (r.daysToPast + r.daysToToday);
 
   ctx.fillStyle = TRACK;
@@ -799,13 +876,15 @@ async function captureCard(W, H) {
   ctx.strokeStyle = DIM;
   ctx.globalAlpha = 0.4;
   ctx.lineWidth = 1;
+  const tickH = Math.round(14 * S);
   ctx.beginPath();
-  ctx.moveTo(midX, y - Math.round(14 * S));
-  ctx.lineTo(midX, y + Math.round(14 * S));
+  ctx.moveTo(midX, y - tickH);
+  ctx.lineTo(midX, y + tickH);
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  const labelSize = Math.round(14 * S);
+  // Bar endpoint labels
+  const labelSize = Math.round(14 * S * textBoost);
   ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "center";
   ctx.fillStyle = DIM;
@@ -814,22 +893,22 @@ async function captureCard(W, H) {
   ctx.fillText("Now", W - PAD - Math.round(28 * S), y + Math.round(5 * S));
 
   // ── Gap durations ──
-  y += Math.round(40 * S);
+  const gapY = y + Math.round((isSquare ? 48 : 40) * S);
   ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "left";
   ctx.fillStyle = DIM;
-  ctx.fillText(`${fmtDuration(r.daysToPast)} to past event`, PAD + Math.round(10 * S), y);
+  ctx.fillText(`${fmtDuration(r.daysToPast)} to past event`, PAD + Math.round(10 * S), gapY);
   ctx.textAlign = "right";
   ctx.fillStyle = ACCENT;
   ctx.globalAlpha = 0.7;
-  ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - Math.round(10 * S), y);
+  ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - Math.round(10 * S), gapY);
   ctx.globalAlpha = 1;
 
   // ── Watermark ──
   ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "center";
   ctx.fillStyle = WMARK;
-  ctx.fillText("profmusgrave.github.io/anotherday", CX, H - Math.round(32 * S));
+  ctx.fillText("profmusgrave.github.io/anotherday", CX, wmY);
 
   return canvas;
 }
@@ -882,6 +961,42 @@ async function copyForPlatform(btnEl, w, h, platformName) {
       showToast("Copy not available in this browser");
     }
   }
+}
+
+// ──────────────────────────────────────────────────────────────
+// SHARE TEXT TO SOCIAL
+// ──────────────────────────────────────────────────────────────
+
+const SITE_URL = "https://profmusgrave.github.io/anotherday";
+
+function getShareText() {
+  if (!currentCard) return "";
+  const r = currentCard;
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const verb = r.recent.plural ? "are" : "is";
+  return `${cap(r.recent.name)} ${verb} now closer to ${r.older.name} than to today.`;
+}
+
+function shareToX() {
+  const text = getShareText() + `\n\nMore reminders of mortality at ${SITE_URL}`;
+  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank");
+}
+
+function shareToBluesky() {
+  const text = getShareText() + `\n\nMore reminders of mortality at ${SITE_URL}`;
+  window.open(`https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`, "_blank");
+}
+
+function shareToLinkedIn() {
+  // LinkedIn's share URL supports a url param; the text must be added manually
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SITE_URL)}`, "_blank");
+  // Copy the text so the user can paste it
+  const text = getShareText() + "\n\nMore reminders of mortality at " + SITE_URL;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast("Text copied — paste into your LinkedIn post");
+  }).catch(() => {
+    showToast("LinkedIn opened — add your caption there");
+  });
 }
 
 generate();
