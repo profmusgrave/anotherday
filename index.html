@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One Day Closer to the End</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -741,78 +740,245 @@ function getShareText() {
 }
 
 async function captureCard() {
-  const cardEl = document.getElementById("card");
-  if (!cardEl || !cardEl.querySelector(".card")) return null;
+  if (!currentCard) return null;
+  const r = currentCard;
 
-  // Create an offscreen wrapper with padding and background for a nice screenshot
-  const wrapper = document.createElement("div");
-  wrapper.style.cssText = `
-    position: fixed; left: -9999px; top: 0;
-    width: 640px; padding: 48px 48px 40px;
-    background: #0a0a0c;
-    font-family: 'DM Mono', monospace;
-    color: #e8e4dc;
-  `;
+  // ── Canvas setup: 1200×630 (OG image ratio) ──
+  const W = 1200, H = 630;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
 
-  // Title
-  const title = document.createElement("div");
-  title.style.cssText = `
-    font-family: 'Instrument Serif', serif;
-    font-size: 1.1rem; font-weight: 400;
-    color: #6b6660; text-align: center;
-    margin-bottom: 36px;
-  `;
-  title.textContent = "One day closer to the end.";
-  wrapper.appendChild(title);
+  // ── Colors ──
+  const BG      = "#0a0a0c";
+  const FG      = "#e8e4dc";
+  const DIM     = "#6b6660";
+  const ACCENT  = "#ff6b35";
+  const ACCENT2 = "#ff9a6c";
+  const TRACK   = "#1a1a1f";
+  const WMARK   = "#3a3630";
 
-  // Clone the card content
-  const clone = cardEl.cloneNode(true);
-  // Make sure the bar fill is visually rendered in the clone
-  const cloneFill = clone.querySelector(".bar-fill");
-  if (cloneFill) {
-    cloneFill.style.transform = `scaleX(1)`;
-    cloneFill.style.width = cloneFill.dataset.pct + "%";
-    cloneFill.style.transition = "none";
+  // ── Fonts (already loaded by page) ──
+  const SERIF = "'Instrument Serif', serif";
+  const MONO  = "'DM Mono', monospace";
+
+  // ── Background ──
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Helper: word-wrap ──
+  function wrapText(text, maxWidth, font) {
+    ctx.font = font;
+    const words = text.split(" ");
+    const lines = [];
+    let line = "";
+    for (const word of words) {
+      const test = line ? line + " " + word : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
   }
-  // Force card visible
-  const cloneCard = clone.querySelector(".card");
-  if (cloneCard) {
-    cloneCard.style.opacity = "1";
-    cloneCard.style.animation = "none";
+
+  // ── Helper: draw colored segments on one line ──
+  // segments: [{ text, color }]
+  function drawSegments(segments, x, y, font, align) {
+    ctx.font = font;
+    // measure total width for centering
+    let totalW = 0;
+    for (const s of segments) {
+      ctx.font = font;
+      totalW += ctx.measureText(s.text).width;
+    }
+    let curX = align === "center" ? x - totalW / 2 : x;
+    for (const s of segments) {
+      ctx.fillStyle = s.color;
+      ctx.font = font;
+      ctx.fillText(s.text, curX, y);
+      curX += ctx.measureText(s.text).width;
+    }
   }
-  wrapper.appendChild(clone);
 
-  // URL watermark
-  const watermark = document.createElement("div");
-  watermark.style.cssText = `
-    margin-top: 28px; text-align: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; color: #4a4640;
-    letter-spacing: 0.04em;
-  `;
-  watermark.textContent = "profmusgrave.github.io/anotherday";
-  wrapper.appendChild(watermark);
+  const PAD = 80;
+  const CX = W / 2;
+  let y = 0;
 
-  document.body.appendChild(wrapper);
+  // ── Title ──
+  y = 90;
+  ctx.font = `400 28px ${SERIF}`;
+  ctx.fillStyle = DIM;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("One day closer to the end.", CX, y);
 
-  try {
-    const canvas = await html2canvas(wrapper, {
-      backgroundColor: "#0a0a0c",
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    });
+  // ── Main text (multi-color, word-wrapped) ──
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const verb = r.recent.plural ? "are" : "is";
+  const fullText = `${cap(r.recent.name)} ${verb} now closer to ${r.older.name} than to today.`;
+  const mainFont = `400 38px ${SERIF}`;
+  const mainLineH = 52;
+  const lines = wrapText(fullText, W - PAD * 2, mainFont);
 
-    capturedDataUrl = canvas.toDataURL("image/png");
-    capturedBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  y = 180;
+  // For each wrapped line, color the segments
+  const recentText = cap(r.recent.name);
+  const olderText = r.older.name;
+  ctx.textAlign = "left"; // we'll center manually
 
-    return capturedDataUrl;
-  } catch (err) {
-    console.error("Capture failed:", err);
-    return null;
-  } finally {
-    document.body.removeChild(wrapper);
+  // Build a flat string → color map
+  const parts = [
+    { text: recentText, color: FG },
+    { text: ` ${verb} now closer to `, color: DIM },
+    { text: olderText, color: ACCENT },
+    { text: " than to today.", color: DIM },
+  ];
+
+  // Flatten into character-level coloring, then draw per-line
+  let charColors = [];
+  for (const p of parts) {
+    for (const ch of p.text) {
+      charColors.push({ ch, color: p.color });
+    }
   }
+
+  // Re-wrap using character array
+  ctx.font = mainFont;
+  const wrappedLines = [];
+  let lineChars = [];
+  let lineWidth = 0;
+  const maxLineW = W - PAD * 2;
+
+  for (let i = 0; i < charColors.length; i++) {
+    const c = charColors[i];
+    const cw = ctx.measureText(c.ch).width;
+    // Try to break at spaces
+    if (lineWidth + cw > maxLineW && lineChars.length > 0) {
+      // Walk back to last space
+      let breakIdx = lineChars.length - 1;
+      while (breakIdx > 0 && lineChars[breakIdx].ch !== " ") breakIdx--;
+      if (breakIdx > 0) {
+        const kept = lineChars.slice(0, breakIdx);
+        const overflow = lineChars.slice(breakIdx + 1); // skip the space
+        wrappedLines.push(kept);
+        lineChars = [...overflow, c];
+        lineWidth = lineChars.reduce((s, cc) => s + ctx.measureText(cc.ch).width, 0);
+      } else {
+        wrappedLines.push(lineChars);
+        lineChars = [c];
+        lineWidth = cw;
+      }
+    } else {
+      lineChars.push(c);
+      lineWidth += cw;
+    }
+  }
+  if (lineChars.length) wrappedLines.push(lineChars);
+
+  // Center the block vertically a bit
+  const blockH = wrappedLines.length * mainLineH;
+  let startY = y;
+
+  for (const wl of wrappedLines) {
+    // Measure line total width
+    let lw = 0;
+    for (const c of wl) lw += ctx.measureText(c.ch).width;
+    let lx = CX - lw / 2;
+    for (const c of wl) {
+      ctx.fillStyle = c.color;
+      ctx.fillText(c.ch, lx, startY);
+      lx += ctx.measureText(c.ch).width;
+    }
+    startY += mainLineH;
+  }
+
+  // ── Date line ──
+  y = startY + 30;
+  const dateFont = `300 16px ${MONO}`;
+  const dateLine = `${fmtDate(r.older.date)}  →  ${fmtDate(r.recent.date)}  →  Today`;
+  ctx.font = dateFont;
+  ctx.textAlign = "center";
+
+  // Draw with the recent date highlighted
+  const dOlder = fmtDate(r.older.date) + "  →  ";
+  const dRecent = fmtDate(r.recent.date);
+  const dEnd = "  →  Today";
+  const dSegs = [
+    { text: dOlder, color: DIM },
+    { text: dRecent, color: FG },
+    { text: dEnd, color: DIM },
+  ];
+  drawSegments(dSegs, CX, y, dateFont, "center");
+
+  // ── Progress bar ──
+  y += 44;
+  const barX = PAD + 60;
+  const barW = W - PAD * 2 - 120;
+  const barH = 10;
+  const barR = 5;
+  const pct = r.daysToPast / (r.daysToPast + r.daysToToday);
+
+  // Track
+  ctx.fillStyle = TRACK;
+  ctx.beginPath();
+  ctx.roundRect(barX, y - barH / 2, barW, barH, barR);
+  ctx.fill();
+
+  // Fill gradient
+  const grad = ctx.createLinearGradient(barX, 0, barX + barW * pct, 0);
+  grad.addColorStop(0, ACCENT);
+  grad.addColorStop(1, ACCENT2);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(barX, y - barH / 2, barW * pct, barH, barR);
+  ctx.fill();
+
+  // Midpoint marker
+  const midX = barX + barW * 0.5;
+  ctx.strokeStyle = DIM;
+  ctx.globalAlpha = 0.4;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(midX, y - 14);
+  ctx.lineTo(midX, y + 14);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Bar labels
+  ctx.font = `300 14px ${MONO}`;
+  ctx.textAlign = "center";
+  ctx.fillStyle = DIM;
+  ctx.fillText(fmtBarLabel(r.older.date), PAD + 28, y + 5);
+  ctx.fillStyle = ACCENT;
+  ctx.fillText("Now", W - PAD - 28, y + 5);
+
+  // ── Gap durations ──
+  y += 40;
+  ctx.font = `300 14px ${MONO}`;
+  ctx.textAlign = "left";
+  ctx.fillStyle = DIM;
+  ctx.fillText(`${fmtDuration(r.daysToPast)} to past event`, PAD + 10, y);
+  ctx.textAlign = "right";
+  ctx.fillStyle = ACCENT;
+  ctx.globalAlpha = 0.7;
+  ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - 10, y);
+  ctx.globalAlpha = 1;
+
+  // ── Watermark ──
+  ctx.font = `300 14px ${MONO}`;
+  ctx.textAlign = "center";
+  ctx.fillStyle = WMARK;
+  ctx.fillText("profmusgrave.github.io/anotherday", CX, H - 32);
+
+  // ── Export ──
+  capturedDataUrl = canvas.toDataURL("image/png");
+  capturedBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  return capturedDataUrl;
 }
 
 async function openShare() {
