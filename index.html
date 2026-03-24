@@ -496,12 +496,12 @@ const NUM_CARDS = 8;
 const MIN_GAP_DAYS = 4 * 365;
 
 // Minimum salience for BOTH events.
-const MIN_SALIENCE = 0.45;
+const MIN_SALIENCE = 0.25;
 
 // Brimley Line: ideal position of the recent event between
 // the older event and today. 0.47 = just barely past midpoint.
 const BRIMLEY_CENTER = 0.47;
-const BRIMLEY_SIGMA  = 0.06; // how tight the sweet spot is
+const BRIMLEY_SIGMA  = 0.08; // how tight the sweet spot is
 
 function brimleyScore(position) {
   // Gaussian centered on BRIMLEY_CENTER
