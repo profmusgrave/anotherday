@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Day Closer to the End</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0c;
+    --fg: #e8e4dc;
+    --dim: #6b6660;
+    --accent: #ff6b35;
+    --card-bg: #111114;
+    --card-border: #1e1e22;
+  }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+
+  .container {
+    max-width: 680px;
+    width: 100%;
+    padding: 40px;
+    text-align: center;
+  }
+
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(1.4rem, 3.5vw, 2rem);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--dim);
+    margin-bottom: 60px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.1s both;
+  }
+
+  .card {
+    opacity: 0;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  .card-main {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 400;
+    line-height: 1.35;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .card-main .event-name { color: var(--fg); }
+  .card-main .closer-to { color: var(--dim); }
+  .card-main .past-event { color: var(--accent); }
+
+  .card-dates {
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .bar-container {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+  }
+
+  .bar-label { white-space: nowrap; min-width: 38px; text-align: center; }
+  .bar-label.today { color: var(--accent); }
+
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    background: #1a1a1f;
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), #ff9a6c);
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+  }
+
+  .bar-fill.animate { transform: scaleX(1); }
+
+  .bar-midpoint {
+    position: absolute;
+    top: -8px;
+    width: 1px;
+    height: 22px;
+    background: var(--dim);
+    opacity: 0.4;
+  }
+
+  .card-gap {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+  }
+
+  .card-gap span:last-child { color: var(--accent); opacity: 0.7; }
+
+  .another-btn {
+    display: inline-block;
+    margin-top: 50px;
+    padding: 10px 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dim);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1s both;
+  }
+
+  .another-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<div class="container">
+  <h1>One day closer to the end.</h1>
+  <div id="card"></div>
+  <button class="another-btn" onclick="generate()">Another</button>
+</div>
+
+<script>
+// ──────────────────────────────────────────────────────────────
+// EVENT DATABASE
+//
+// Each event has THREE scoring fields beyond name/date:
+//
+//   cat      — category tag. Cross-domain pairings are a bonus.
+//
+//   vibe     — "perceived recency" from 0 to 1.
+//              How recent does this FEEL regardless of its date?
+//              1.0 = "that was basically yesterday"
+//              0.0 = "the dawn of civilization"
+//
+//   salience — "how much does the average person care?" 0 to 1.
+//              This is SEPARATE from vibe. WWII feels old
+//              (vibe 0.22) but everyone knows about it
+//              (salience 0.95). The Magna Carta feels old AND
+//              most people barely remember it (salience 0.25).
+//
+//              Salience acts as a GATE: if both events in a
+//              pairing don't clear a minimum salience, nobody
+//              will care about the comparison no matter how
+//              mathematically surprising it is.
+//
+// The surprise formula needs three things to work:
+//   1. People CARE about both events (salience)
+//   2. The GAP between them is non-obvious (not same-year)
+//   3. The MATH is lopsided (much closer to past than today)
+// Bonus: cross-domain categories + vibe gap.
+// ──────────────────────────────────────────────────────────────
+const events = [
+  // ── Ancient / Pre-modern ──
+  //                                                                                cat          vibe   salience
+  { name: "the completion of the Great Pyramid of Giza",    date: "-2560-01-01", cat: "ancient",   vibe: 0.02, salience: 0.80 },
+  { name: "the founding of Rome",                           date: "-0753-04-21", cat: "ancient",   vibe: 0.04, salience: 0.35 },
+  { name: "the Battle of Marathon",                         date: "-0490-09-12", cat: "war",       vibe: 0.04, salience: 0.25 },
+  { name: "the death of Socrates",                          date: "-0399-02-15", cat: "culture",   vibe: 0.05, salience: 0.40 },
+  { name: "Alexander the Great's death",                    date: "-0323-06-11", cat: "war",       vibe: 0.05, salience: 0.45 },
+  { name: "the assassination of Julius Caesar",             date: "-0044-03-15", cat: "politics",  vibe: 0.08, salience: 0.70 },
+  { name: "Cleopatra's death",                              date: "-0030-08-12", cat: "politics",  vibe: 0.10, salience: 0.65 },
+  { name: "the eruption of Vesuvius",                       date: "0079-08-24",  cat: "disaster",  vibe: 0.08, salience: 0.55 },
+  { name: "the fall of the Western Roman Empire",           date: "0476-09-04",  cat: "politics",  vibe: 0.05, salience: 0.30 },
+  { name: "the signing of the Magna Carta",                 date: "1215-06-15",  cat: "politics",  vibe: 0.07, salience: 0.25 },
+  { name: "the fall of Constantinople",                     date: "1453-05-29",  cat: "war",       vibe: 0.05, salience: 0.20 },
+  { name: "Columbus reaching the Americas",                 date: "1492-10-12",  cat: "landmark",  vibe: 0.10, salience: 0.75 },
+  { name: "the publication of the Gutenberg Bible",         date: "1455-02-23",  cat: "tech",      vibe: 0.06, salience: 0.40 },
+
+  // ── Early Modern ──
+  { name: "Shakespeare's birth",                            date: "1564-04-23",  cat: "culture",   vibe: 0.12, salience: 0.65 },
+  { name: "the Gunpowder Plot",                             date: "1605-11-05",  cat: "politics",  vibe: 0.08, salience: 0.30 },
+  { name: "the Great Fire of London",                       date: "1666-09-02",  cat: "disaster",  vibe: 0.07, salience: 0.30 },
+  { name: "Newton publishing the Principia",                date: "1687-07-05",  cat: "science",   vibe: 0.10, salience: 0.50 },
+
+  // ── 18th Century ──
+  { name: "the signing of the Declaration of Independence", date: "1776-07-04",  cat: "politics",  vibe: 0.15, salience: 0.85 },
+  { name: "the storming of the Bastille",                   date: "1789-07-14",  cat: "politics",  vibe: 0.10, salience: 0.55 },
+  { name: "Mozart's death",                                 date: "1791-12-05",  cat: "culture",   vibe: 0.12, salience: 0.50 },
+
+  // ── 19th Century ──
+  { name: "the Battle of Waterloo",                         date: "1815-06-18",  cat: "war",       vibe: 0.10, salience: 0.55 },
+  { name: "Darwin's On the Origin of Species",              date: "1859-11-24",  cat: "science",   vibe: 0.14, salience: 0.65 },
+  { name: "the abolition of slavery in the US",             date: "1865-12-06",  cat: "politics",  vibe: 0.18, salience: 0.90 },
+  { name: "the opening of the Suez Canal",                  date: "1869-11-17",  cat: "landmark",  vibe: 0.08, salience: 0.30 },
+  { name: "the invention of the telephone",                 date: "1876-03-10",  cat: "tech",      vibe: 0.14, salience: 0.65 },
+  { name: "the Eiffel Tower's completion",                  date: "1889-03-31",  cat: "landmark",  vibe: 0.16, salience: 0.70 },
+
+  // ── Early 20th Century ──
+  { name: "the Wright Brothers' first flight",              date: "1903-12-17",  cat: "tech",      vibe: 0.16, salience: 0.75 },
+  { name: "the sinking of the Titanic",                     date: "1912-04-15",  cat: "disaster",  vibe: 0.25, salience: 0.95 },
+  { name: "the start of World War I",                       date: "1914-07-28",  cat: "war",       vibe: 0.12, salience: 0.70 },
+  { name: "the end of World War I",                         date: "1918-11-11",  cat: "war",       vibe: 0.12, salience: 0.70 },
+  { name: "women gaining the vote in the US",               date: "1920-08-18",  cat: "politics",  vibe: 0.18, salience: 0.70 },
+  { name: "the discovery of penicillin",                    date: "1928-09-28",  cat: "science",   vibe: 0.15, salience: 0.55 },
+  { name: "the start of World War II",                      date: "1939-09-01",  cat: "war",       vibe: 0.20, salience: 0.90 },
+  { name: "D-Day",                                          date: "1944-06-06",  cat: "war",       vibe: 0.22, salience: 0.85 },
+  { name: "the end of World War II",                        date: "1945-09-02",  cat: "war",       vibe: 0.22, salience: 0.95 },
+  { name: "the atomic bombing of Hiroshima",                date: "1945-08-06",  cat: "war",       vibe: 0.25, salience: 0.90 },
+
+  // ── Mid 20th Century ──
+  { name: "the founding of NATO",                           date: "1949-04-04",  cat: "politics",  vibe: 0.15, salience: 0.35 },
+  { name: "the coronation of Queen Elizabeth II",            date: "1953-06-02",  cat: "politics",  vibe: 0.20, salience: 0.60 },
+  { name: "the launch of Sputnik",                          date: "1957-10-04",  cat: "space",     vibe: 0.22, salience: 0.60 },
+  { name: "the Cuban Missile Crisis",                       date: "1962-10-16",  cat: "politics",  vibe: 0.20, salience: 0.60 },
+  { name: "the assassination of JFK",                       date: "1963-11-22",  cat: "politics",  vibe: 0.30, salience: 0.90 },
+  { name: "the Moon landing",                               date: "1969-07-20",  cat: "space",     vibe: 0.30, salience: 0.95 },
+  { name: "Woodstock",                                      date: "1969-08-15",  cat: "culture",   vibe: 0.32, salience: 0.70 },
+  { name: "the Watergate break-in",                         date: "1972-06-17",  cat: "politics",  vibe: 0.22, salience: 0.55 },
+  { name: "the first Star Wars film's release",             date: "1977-05-25",  cat: "culture",   vibe: 0.55, salience: 0.90 },
+  { name: "the Three Mile Island accident",                 date: "1979-03-28",  cat: "disaster",  vibe: 0.15, salience: 0.30 },
+
+  // ── 1980s ──
+  { name: "the launch of MTV",                              date: "1981-08-01",  cat: "culture",   vibe: 0.42, salience: 0.65 },
+  { name: "the Challenger disaster",                        date: "1986-01-28",  cat: "space",     vibe: 0.30, salience: 0.70 },
+  { name: "the Chernobyl disaster",                         date: "1986-04-26",  cat: "disaster",  vibe: 0.35, salience: 0.75 },
+  { name: "the fall of the Berlin Wall",                    date: "1989-11-09",  cat: "politics",  vibe: 0.38, salience: 0.90 },
+  { name: "the Tiananmen Square protests",                  date: "1989-06-04",  cat: "politics",  vibe: 0.32, salience: 0.70, plural: true },
+
+  // ── 1990s ──
+  { name: "the dissolution of the Soviet Union",            date: "1991-12-26",  cat: "politics",  vibe: 0.35, salience: 0.75 },
+  { name: "the release of Jurassic Park",                   date: "1993-06-11",  cat: "culture",   vibe: 0.62, salience: 0.80 },
+  { name: "the premiere of Friends",                        date: "1994-09-22",  cat: "culture",   vibe: 0.70, salience: 0.85 },
+  { name: "the release of Windows 95",                      date: "1995-08-24",  cat: "tech",      vibe: 0.50, salience: 0.60 },
+  { name: "the release of Toy Story",                       date: "1995-11-22",  cat: "culture",   vibe: 0.72, salience: 0.85 },
+  { name: "Dolly the sheep being cloned",                   date: "1996-07-05",  cat: "science",   vibe: 0.40, salience: 0.50 },
+  { name: "the release of Titanic (film)",                  date: "1997-12-19",  cat: "culture",   vibe: 0.65, salience: 0.85 },
+  { name: "Google's founding",                              date: "1998-09-04",  cat: "tech",      vibe: 0.60, salience: 0.80 },
+
+  // ── 2000s ──
+  { name: "Y2K",                                            date: "2000-01-01",  cat: "tech",      vibe: 0.55, salience: 0.65 },
+  { name: "the September 11 attacks",                       date: "2001-09-11",  cat: "disaster",  vibe: 0.70, salience: 0.98, plural: true },
+  { name: "the launch of Wikipedia",                        date: "2001-01-15",  cat: "tech",      vibe: 0.55, salience: 0.60 },
+  { name: "the Columbia shuttle disaster",                  date: "2003-02-01",  cat: "space",     vibe: 0.35, salience: 0.40 },
+  { name: "the Indian Ocean tsunami",                       date: "2004-12-26",  cat: "disaster",  vibe: 0.45, salience: 0.70 },
+  { name: "the launch of YouTube",                          date: "2005-02-14",  cat: "tech",      vibe: 0.68, salience: 0.85 },
+  { name: "the release of the first iPhone",                date: "2007-06-29",  cat: "tech",      vibe: 0.75, salience: 0.90 },
+  { name: "the start of the 2008 financial crisis",         date: "2008-09-15",  cat: "politics",  vibe: 0.55, salience: 0.75 },
+  { name: "Obama's inauguration",                           date: "2009-01-20",  cat: "politics",  vibe: 0.62, salience: 0.85 },
+
+  // ── 2010s ──
+  { name: "the Deepwater Horizon oil spill",                date: "2010-04-20",  cat: "disaster",  vibe: 0.45, salience: 0.55 },
+  { name: "the Arab Spring beginning",                      date: "2010-12-17",  cat: "politics",  vibe: 0.40, salience: 0.50 },
+  { name: "the death of Osama bin Laden",                   date: "2011-05-02",  cat: "politics",  vibe: 0.55, salience: 0.80 },
+  { name: "the release of Minecraft",                       date: "2011-11-18",  cat: "tech",      vibe: 0.78, salience: 0.80 },
+  { name: "Facebook's IPO",                                 date: "2012-05-18",  cat: "tech",      vibe: 0.55, salience: 0.55 },
+  { name: "the Higgs boson discovery",                      date: "2012-07-04",  cat: "science",   vibe: 0.48, salience: 0.50 },
+  { name: "the Snowden revelations",                        date: "2013-06-05",  cat: "politics",  vibe: 0.52, salience: 0.60, plural: true },
+  { name: "the release of Frozen",                          date: "2013-11-27",  cat: "culture",   vibe: 0.75, salience: 0.80 },
+  { name: "the Ice Bucket Challenge going viral",           date: "2014-07-15",  cat: "social",    vibe: 0.65, salience: 0.65 },
+  { name: "the Paris Climate Agreement",                    date: "2015-12-12",  cat: "politics",  vibe: 0.45, salience: 0.50 },
+  { name: "the UK Brexit vote",                             date: "2016-06-23",  cat: "politics",  vibe: 0.62, salience: 0.75 },
+  { name: "the first photo of a black hole",                date: "2019-04-10",  cat: "science",   vibe: 0.70, salience: 0.65 },
+
+  // ── 2020s ──
+  { name: "the WHO declaring COVID-19 a pandemic",          date: "2020-03-11",  cat: "disaster",  vibe: 0.88, salience: 0.98 },
+  { name: "the launch of the James Webb Space Telescope",   date: "2021-12-25",  cat: "space",     vibe: 0.80, salience: 0.65 },
+  { name: "the release of ChatGPT",                         date: "2022-11-30",  cat: "tech",      vibe: 0.92, salience: 0.85 },
+];
+
+
+// ──────────────────────────────────────────────────────────────
+// CATEGORY DISTANCE MATRIX
+// How "far apart" two categories feel. Pairings across
+// distant categories are more surprising.
+// 1.0 = maximally different worlds
+// 0.0 = same category
+// ──────────────────────────────────────────────────────────────
+const CAT_DISTANCE = {
+  // same → 0
+  // related → 0.2–0.4
+  // unrelated → 0.6–1.0
+};
+
+function catDistance(a, b) {
+  if (a === b) return 0.0;
+  const key = [a, b].sort().join("|");
+  const map = {
+    "politics|war":      0.15,  // closely related
+    "disaster|war":      0.20,
+    "politics|disaster":  0.25,
+    "science|tech":      0.20,
+    "space|tech":        0.25,
+    "science|space":     0.20,
+    "culture|social":    0.25,
+    "politics|social":   0.30,
+    // cross-domain (the good stuff)
+    "ancient|tech":      1.00,
+    "ancient|culture":   0.95,
+    "ancient|social":    0.95,
+    "culture|war":       0.80,
+    "culture|science":   0.85,
+    "culture|space":     0.85,
+    "culture|politics":  0.70,
+    "culture|disaster":  0.75,
+    "culture|ancient":   0.95,
+    "tech|war":          0.80,
+    "tech|ancient":      1.00,
+    "tech|politics":     0.60,
+    "tech|disaster":     0.65,
+    "social|war":        0.85,
+    "social|science":    0.80,
+    "social|space":      0.85,
+    "social|ancient":    0.95,
+    "social|disaster":   0.60,
+    "social|tech":       0.40,
+    "space|war":         0.70,
+    "space|politics":    0.60,
+    "space|disaster":    0.55,
+    "space|ancient":     0.95,
+    "space|culture":     0.85,
+    "science|war":       0.75,
+    "science|politics":  0.65,
+    "science|disaster":  0.60,
+    "science|ancient":   0.90,
+    "science|culture":   0.85,
+    "disaster|ancient":  0.70,
+    "landmark|culture":  0.60,
+    "landmark|tech":     0.70,
+    "landmark|war":      0.50,
+    "landmark|politics": 0.45,
+    "landmark|science":  0.65,
+    "landmark|space":    0.70,
+    "landmark|disaster": 0.55,
+    "landmark|ancient":  0.40,
+    "landmark|social":   0.65,
+  };
+  return map[key] ?? 0.5; // default for unlisted combos
+}
+
+
+// ──────────────────────────────────────────────────────────────
+// DATE UTILITIES
+// ──────────────────────────────────────────────────────────────
+
+const MS_PER_DAY  = 86400000;
+const MS_PER_YEAR = 365.2425 * MS_PER_DAY;
+
+function parseDate(str) {
+  const m = str.match(/^(-?\d+)-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const year  = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10) - 1;
+  const day   = parseInt(m[3], 10);
+  if (year >= 0) {
+    const d = new Date(Date.UTC(year, month, day));
+    d.setUTCFullYear(year);
+    return d.getTime();
+  }
+  const monthDays = [0,31,59,90,120,151,181,212,243,273,304,334];
+  return year * MS_PER_YEAR + (monthDays[month] + day - 1) * MS_PER_DAY;
+}
+
+function daysBetween(a, b) { return Math.abs(b - a) / MS_PER_DAY; }
+
+function fmtDuration(days) {
+  const y = Math.floor(days / 365.2425);
+  const rem = Math.round(days - y * 365.2425);
+  if (y > 0 && rem > 30) {
+    return `${y.toLocaleString()} yr${y !== 1 ? 's' : ''}, ${Math.round(rem / 30.44)} mo`;
+  }
+  if (y > 0) return `${y.toLocaleString()} yr${y !== 1 ? 's' : ''}`;
+  return `${Math.round(days)} days`;
+}
+
+function fmtDate(str) {
+  const m = str.match(/^(-?\d+)-(\d{2})-(\d{2})$/);
+  const year  = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10);
+  const day   = parseInt(m[3], 10);
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (year < 0) return `${Math.abs(year)} BC`;
+  if (year < 1000) return `${names[month-1]} ${day}, ${year} AD`;
+  return `${names[month-1]} ${day}, ${year}`;
+}
+
+function fmtBarLabel(str) {
+  const y = parseInt(str.match(/^(-?\d+)/)[1], 10);
+  return y < 0 ? `${Math.abs(y)} BC` : `${y}`;
+}
+
+
+// ──────────────────────────────────────────────────────────────
+// SURPRISE SCORING + GENERATION
+//
+// THE BRIMLEY LINE
+//
+// The sweet spot for surprise is when the "recent" event sits
+// at or just below the MIDPOINT between the older event and
+// today — the 44–50% zone. This is the moment where your gut
+// says "no way" and the math says "yes way."
+//
+//   position = daysToPast / (daysToPast + daysToToday)
+//
+//   0.00 = the recent event IS the older event (boring)
+//   0.25 = obviously close to the past event (boring)
+//   0.47 = BRIMLEY LINE — just barely tipped over (!!!)
+//   0.50 = exact midpoint (still great)
+//
+// A Gaussian curve centered on 0.47 creates the scoring:
+// events right at the Brimley Line score highest, events
+// far from it (0.10, 0.30) score near zero.
+//
+// On top of that: salience gate, vibe gap bonus, category
+// distance bonus. But position is KING.
+// ──────────────────────────────────────────────────────────────
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const today     = Date.now();
+const NUM_CARDS = 8;
+
+// Minimum gap between the two events: ~4 years in days.
+const MIN_GAP_DAYS = 4 * 365;
+
+// Minimum salience for BOTH events.
+const MIN_SALIENCE = 0.45;
+
+// Brimley Line: ideal position of the recent event between
+// the older event and today. 0.47 = just barely past midpoint.
+const BRIMLEY_CENTER = 0.47;
+const BRIMLEY_SIGMA  = 0.06; // how tight the sweet spot is
+
+function brimleyScore(position) {
+  // Gaussian centered on BRIMLEY_CENTER
+  const delta = position - BRIMLEY_CENTER;
+  return Math.exp(-(delta * delta) / (2 * BRIMLEY_SIGMA * BRIMLEY_SIGMA));
+}
+
+function scorePair(recent, older, daysToToday, daysToPast) {
+  // ── GATE: both events must be well-known ──
+  const minSalience = Math.min(recent.salience, older.salience);
+  if (minSalience < MIN_SALIENCE) return -1;
+
+  // ── CORE: Brimley Line position ──
+  // Where does the recent event sit between older and today?
+  const position = daysToPast / (daysToPast + daysToToday);
+  const brimley  = brimleyScore(position);
+
+  // ── BONUS: vibe gap (one feels recent, one feels ancient) ──
+  const vibeGap = Math.max(0, recent.vibe - older.vibe);
+
+  // ── BONUS: cross-domain surprise ──
+  const catDist = catDistance(recent.cat, older.cat);
+
+  // ── MULTIPLIER: average salience ──
+  const avgSalience = (recent.salience + older.salience) / 2;
+
+  // Brimley score is king (0–1), boosted by salience,
+  // with vibe gap and category as tiebreakers.
+  return (brimley * 5 * avgSalience)
+       + (vibeGap * 1.5)
+       + (catDist * 1.0);
+}
+
+function generate() {
+  // 1. Build ALL valid pairs and score them
+  const allPairs = [];
+
+  for (const recent of events) {
+    const recentMs    = parseDate(recent.date);
+    const daysToToday = daysBetween(recentMs, today);
+
+    for (const older of events) {
+      const olderMs = parseDate(older.date);
+      if (olderMs >= recentMs) continue;
+      const daysToPast = daysBetween(olderMs, recentMs);
+      if (daysToPast >= daysToToday) continue;     // not actually closer
+      if (daysToPast < MIN_GAP_DAYS) continue;     // trivially close
+
+      const score = scorePair(recent, older, daysToToday, daysToPast);
+      if (score < 0) continue;                     // failed salience gate
+
+      allPairs.push({ recent, older, daysToToday, daysToPast, score });
+    }
+  }
+
+  // 2. Sort by score descending
+  allPairs.sort((a, b) => b.score - a.score);
+
+  // 3. Pick ONE random card from the top pool
+  const pool = allPairs.slice(0, Math.min(30, allPairs.length));
+  const r = pool[Math.floor(Math.random() * pool.length)];
+  if (!r) return;
+
+  const pct = ((r.daysToPast / (r.daysToPast + r.daysToToday)) * 100).toFixed(1);
+  const el = document.getElementById("card");
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const verb = r.recent.plural ? "are" : "is";
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-main">
+        <span class="event-name">${cap(r.recent.name)}</span>
+        <span class="closer-to"> ${verb} now closer to </span>
+        <span class="past-event">${r.older.name}</span>
+        <span class="closer-to"> than to today.</span>
+      </div>
+      <div class="card-dates">
+        ${fmtDate(r.older.date)} &#8594; <strong style="color:var(--fg)">${fmtDate(r.recent.date)}</strong> &#8594; Today
+      </div>
+      <div class="bar-container">
+        <span class="bar-label">${fmtBarLabel(r.older.date)}</span>
+        <div class="bar-track">
+          <div class="bar-fill" data-pct="${pct}"></div>
+          <div class="bar-midpoint" style="left:50%"></div>
+        </div>
+        <span class="bar-label today">Now</span>
+      </div>
+      <div class="card-gap">
+        <span>${fmtDuration(r.daysToPast)} to past event</span>
+        <span>${fmtDuration(r.daysToToday)} to today</span>
+      </div>
+    </div>
+  `;
+
+  // Animate bar after a beat
+  requestAnimationFrame(() => {
+    const fill = el.querySelector(".bar-fill");
+    if (fill) {
+      fill.style.width = fill.dataset.pct + "%";
+      fill.classList.add("animate");
+    }
+  });
+}
+
+generate();
+</script>
+</body>
+</html>
