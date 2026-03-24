@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One Day Closer to the End</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -137,9 +138,19 @@
 
   .card-gap span:last-child { color: var(--accent); opacity: 0.7; }
 
-  .another-btn {
-    display: inline-block;
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
     margin-top: 50px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1s both;
+  }
+
+  .another-btn, .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     padding: 10px 24px;
     font-family: 'DM Mono', monospace;
     font-size: 0.7rem;
@@ -151,13 +162,192 @@
     background: transparent;
     cursor: pointer;
     transition: color 0.2s, border-color 0.2s;
-    opacity: 0;
-    animation: fadeIn 0.5s ease 1s both;
   }
 
-  .another-btn:hover {
+  .another-btn:hover, .share-btn:hover {
     color: var(--accent);
     border-color: var(--accent);
+  }
+
+  .share-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── Share Modal ── */
+  .share-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .share-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .share-modal {
+    background: #131316;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 400px;
+    width: calc(100% - 48px);
+    transform: translateY(16px) scale(0.97);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .share-overlay.open .share-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .share-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .share-modal-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.2rem;
+    color: var(--fg);
+  }
+
+  .share-close-btn {
+    background: none;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+    line-height: 0;
+  }
+
+  .share-close-btn:hover { color: var(--fg); }
+
+  .share-close-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .share-preview {
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 1px solid var(--card-border);
+  }
+
+  .share-preview img {
+    width: 100%;
+    display: block;
+  }
+
+  .share-preview-loading {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dim);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .share-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .share-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--fg);
+    background: #1a1a1f;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-align: left;
+  }
+
+  .share-action-btn:hover {
+    border-color: var(--card-border);
+    background: #1f1f24;
+  }
+
+  .share-action-btn .share-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .share-action-btn .share-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .share-action-btn .share-label {
+    flex: 1;
+  }
+
+  .share-action-btn .share-hint {
+    font-size: 0.55rem;
+    color: var(--dim);
+    letter-spacing: 0.02em;
+  }
+
+  .share-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 10px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg);
+    background: #1a1a1f;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    z-index: 300;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+  }
+
+  .share-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 
   @keyframes fadeUp {
@@ -172,6 +362,7 @@
 
   @media (max-width: 600px) {
     .container { padding: 24px; }
+    .share-modal { padding: 20px 24px; }
   }
 </style>
 </head>
@@ -181,251 +372,201 @@
 <div class="container">
   <h1>One day closer to the end.</h1>
   <div id="card"></div>
-  <button class="another-btn" onclick="generate()">Another</button>
+  <div class="btn-row">
+    <button class="another-btn" onclick="generate()">Another</button>
+    <button class="share-btn" onclick="openShare()">
+      <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      Share
+    </button>
+  </div>
 </div>
+
+<!-- Share Modal -->
+<div class="share-overlay" id="shareOverlay" onclick="closeShareOutside(event)">
+  <div class="share-modal">
+    <div class="share-modal-header">
+      <span class="share-modal-title">Share this</span>
+      <button class="share-close-btn" onclick="closeShare()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="share-preview" id="sharePreview">
+      <div class="share-preview-loading">Capturing...</div>
+    </div>
+    <div class="share-actions">
+      <button class="share-action-btn" onclick="shareToBluesky()">
+        <span class="share-icon"><svg viewBox="0 0 600 530" fill="var(--fg)"><path d="M135.72 44.03C202.216 93.951 273.74 195.17 300 249.49c26.262-54.316 97.782-155.54 164.28-205.46C512.26 8.009 590-19.862 590 68.825c0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.38-3.69-10.832-3.708-7.896-.017-2.935-1.193.516-3.707 7.896-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.256 82.697-152.22-67.108 11.421-142.55-7.449-163.25-81.433C20.15 217.613 10 86.536 10 68.824c0-88.687 77.742-60.816 125.72-24.795z"/></svg></span>
+        <span class="share-label">Bluesky</span>
+        <span class="share-hint">opens compose</span>
+      </button>
+      <button class="share-action-btn" onclick="shareToLinkedIn()">
+        <span class="share-icon"><svg viewBox="0 0 24 24" fill="var(--fg)"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></span>
+        <span class="share-label">LinkedIn</span>
+        <span class="share-hint">opens compose</span>
+      </button>
+      <button class="share-action-btn" onclick="shareToInstagram()">
+        <span class="share-icon"><svg viewBox="0 0 24 24" fill="var(--fg)"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></span>
+        <span class="share-label">Instagram</span>
+        <span class="share-hint">saves image</span>
+      </button>
+      <button class="share-action-btn" onclick="copyImage()">
+        <span class="share-icon"><svg viewBox="0 0 24 24" stroke="var(--fg)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span>
+        <span class="share-label">Copy image</span>
+        <span class="share-hint">to clipboard</span>
+      </button>
+      <button class="share-action-btn" onclick="downloadImage()">
+        <span class="share-icon"><svg viewBox="0 0 24 24" stroke="var(--fg)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+        <span class="share-label">Save image</span>
+        <span class="share-hint">download .png</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="share-toast" id="shareToast"></div>
 
 <script>
 // ──────────────────────────────────────────────────────────────
 // EVENT DATABASE
-//
-// Each event has THREE scoring fields beyond name/date:
-//
-//   cat      — category tag. Cross-domain pairings are a bonus.
-//
-//   vibe     — "perceived recency" from 0 to 1.
-//              How recent does this FEEL regardless of its date?
-//              1.0 = "that was basically yesterday"
-//              0.0 = "the dawn of civilization"
-//
-//   salience — "how much does the average person care?" 0 to 1.
-//              This is SEPARATE from vibe. WWII feels old
-//              (vibe 0.22) but everyone knows about it
-//              (salience 0.95). The Magna Carta feels old AND
-//              most people barely remember it (salience 0.25).
-//
-//              Salience acts as a GATE: if both events in a
-//              pairing don't clear a minimum salience, nobody
-//              will care about the comparison no matter how
-//              mathematically surprising it is.
-//
-// The surprise formula needs three things to work:
-//   1. People CARE about both events (salience)
-//   2. The GAP between them is non-obvious (not same-year)
-//   3. The MATH is lopsided (much closer to past than today)
-// Bonus: cross-domain categories + vibe gap.
 // ──────────────────────────────────────────────────────────────
 const events = [
-  // ── Ancient / Pre-modern ──
-  //                                                                                cat          vibe   salience
-//  { name: "the completion of the Great Pyramid of Giza",    date: "-2560-01-01", cat: "ancient",   vibe: 0.02, salience: 0.80 },
-//  { name: "the founding of Rome",                           date: "-0753-04-21", cat: "ancient",   vibe: 0.04, salience: 0.35 },
-//  { name: "the Battle of Marathon",                         date: "-0490-09-12", cat: "war",       vibe: 0.04, salience: 0.25 },
-//  { name: "the death of Socrates",                          date: "-0399-02-15", cat: "culture",   vibe: 0.05, salience: 0.40 },
-//  { name: "Alexander the Great's death",                    date: "-0323-06-11", cat: "war",       vibe: 0.05, salience: 0.45 },
-//  { name: "the assassination of Julius Caesar",             date: "-0044-03-15", cat: "politics",  vibe: 0.08, salience: 0.70 },
-//  { name: "Cleopatra's death",                              date: "-0030-08-12", cat: "politics",  vibe: 0.10, salience: 0.65 },
-//  { name: "the eruption of Vesuvius",                       date: "0079-08-24",  cat: "disaster",  vibe: 0.08, salience: 0.55 },
-//  { name: "the fall of the Western Roman Empire",           date: "0476-09-04",  cat: "politics",  vibe: 0.05, salience: 0.30 },
   { name: "the signing of the Magna Carta",                 date: "1215-06-15",  cat: "politics",  vibe: 0.07, salience: 0.25 },
   { name: "the fall of Constantinople",                     date: "1453-05-29",  cat: "war",       vibe: 0.05, salience: 0.20 },
   { name: "Columbus reaching the Americas",                 date: "1492-10-12",  cat: "landmark",  vibe: 0.10, salience: 0.75 },
   { name: "the publication of the Gutenberg Bible",         date: "1455-02-23",  cat: "tech",      vibe: 0.06, salience: 0.40 },
-
-  // ── Early Modern ──
   { name: "Shakespeare's birth",                            date: "1564-04-23",  cat: "culture",   vibe: 0.12, salience: 0.65 },
   { name: "the Gunpowder Plot",                             date: "1605-11-05",  cat: "politics",  vibe: 0.08, salience: 0.30 },
   { name: "the Great Fire of London",                       date: "1666-09-02",  cat: "disaster",  vibe: 0.07, salience: 0.30 },
   { name: "Newton publishing the Principia",                date: "1687-07-05",  cat: "science",   vibe: 0.10, salience: 0.50 },
-
-  // ── 18th Century ──
   { name: "the signing of the Declaration of Independence", date: "1776-07-04",  cat: "politics",  vibe: 0.15, salience: 0.85 },
   { name: "the storming of the Bastille",                   date: "1789-07-14",  cat: "politics",  vibe: 0.10, salience: 0.55 },
   { name: "Mozart's death",                                 date: "1791-12-05",  cat: "culture",   vibe: 0.12, salience: 0.50 },
-
-  // ── 19th Century ──
   { name: "the Battle of Waterloo",                         date: "1815-06-18",  cat: "war",       vibe: 0.10, salience: 0.55 },
   { name: "Darwin's On the Origin of Species",              date: "1859-11-24",  cat: "science",   vibe: 0.14, salience: 0.65 },
   { name: "the abolition of slavery in the US",             date: "1865-12-06",  cat: "politics",  vibe: 0.18, salience: 0.90 },
   { name: "the opening of the Suez Canal",                  date: "1869-11-17",  cat: "landmark",  vibe: 0.08, salience: 0.30 },
   { name: "the invention of the telephone",                 date: "1876-03-10",  cat: "tech",      vibe: 0.14, salience: 0.65 },
-  { name: "the publication of the first Sherlock Holmes story",     date: "1887-12-15",  cat: "culture",  vibe: 0.16, salience: 0.70 },
+  { name: "the publication of the first Sherlock Holmes story", date: "1887-12-15", cat: "culture", vibe: 0.16, salience: 0.70 },
   { name: "the Eiffel Tower's completion",                  date: "1889-03-31",  cat: "landmark",  vibe: 0.16, salience: 0.70 },
-
-  // ── Early 20th Century ──
   { name: "the Wright Brothers' first flight",              date: "1903-12-17",  cat: "tech",      vibe: 0.16, salience: 0.75 },
-  { name: "the Tunguska event",              date: "1908-06-30",  cat: "space",      vibe: 0.16, salience: 0.55 },
+  { name: "the Tunguska event",                             date: "1908-06-30",  cat: "space",     vibe: 0.16, salience: 0.55 },
   { name: "the sinking of the Titanic",                     date: "1912-04-15",  cat: "disaster",  vibe: 0.25, salience: 0.95 },
   { name: "the start of World War I",                       date: "1914-07-28",  cat: "war",       vibe: 0.12, salience: 0.70 },
   { name: "the end of World War I",                         date: "1918-11-11",  cat: "war",       vibe: 0.12, salience: 0.70 },
   { name: "women gaining the vote in the US",               date: "1920-08-18",  cat: "politics",  vibe: 0.18, salience: 0.70 },
-  { name: "the founding of the USSR",               date: "1922-12-30",  cat: "politics",  vibe: 0.18, salience: 0.70 },
-  { name: "the publication of Winnie The Pooh",              date: "1926-10-14",  cat: "culture",   vibe: 0.15, salience: 0.55 },
+  { name: "the founding of the USSR",                       date: "1922-12-30",  cat: "politics",  vibe: 0.18, salience: 0.70 },
+  { name: "the publication of Winnie The Pooh",             date: "1926-10-14",  cat: "culture",   vibe: 0.15, salience: 0.55 },
   { name: "the discovery of penicillin",                    date: "1928-09-28",  cat: "science",   vibe: 0.15, salience: 0.55 },
   { name: "the start of World War II",                      date: "1939-09-01",  cat: "war",       vibe: 0.20, salience: 0.90 },
   { name: "D-Day",                                          date: "1944-06-06",  cat: "war",       vibe: 0.22, salience: 0.85 },
   { name: "the end of World War II",                        date: "1945-09-02",  cat: "war",       vibe: 0.22, salience: 0.95 },
   { name: "the atomic bombing of Hiroshima",                date: "1945-08-06",  cat: "war",       vibe: 0.25, salience: 0.90 },
-
-  // ── Mid 20th Century ──
   { name: "the founding of NATO",                           date: "1949-04-04",  cat: "politics",  vibe: 0.15, salience: 0.35 },
-  { name: "the first use of a charge card",                  date: "1950-02-08",  cat: "culture",  vibe: 0.15, salience: 0.35 },
-  { name: "the first Formula One World Championship race",    date: "1950-05-13",  cat: "culture",  vibe: 0.15, salience: 0.35 },
-  { name: "the beginning of the Korean War",    date: "1950-06-25",  cat: "politics",  vibe: 0.15, salience: 0.45 },
-  { name: "the coronation of Queen Elizabeth II",            date: "1953-06-02",  cat: "politics",  vibe: 0.20, salience: 0.60 },
-  { name: "the climbing of Mt Everest",            date: "1953-05-29",  cat: "culture",  vibe: 0.22, salience: 0.65 },
-  { name: "the opening of Disneyland",                       date: "1955-07-17",  cat: "culture",     vibe: 0.22, salience: 0.60 },
-  { name: "Rosa Parks refusing to move on the bus",          date: "1955-12-01",  cat: "culture",     vibe: 0.22, salience: 0.8 },
+  { name: "the first use of a charge card",                 date: "1950-02-08",  cat: "culture",   vibe: 0.15, salience: 0.35 },
+  { name: "the first Formula One World Championship race",  date: "1950-05-13",  cat: "culture",   vibe: 0.15, salience: 0.35 },
+  { name: "the beginning of the Korean War",                date: "1950-06-25",  cat: "politics",  vibe: 0.15, salience: 0.45 },
+  { name: "the coronation of Queen Elizabeth II",           date: "1953-06-02",  cat: "politics",  vibe: 0.20, salience: 0.60 },
+  { name: "the climbing of Mt Everest",                     date: "1953-05-29",  cat: "culture",   vibe: 0.22, salience: 0.65 },
+  { name: "the opening of Disneyland",                      date: "1955-07-17",  cat: "culture",   vibe: 0.22, salience: 0.60 },
+  { name: "Rosa Parks refusing to move on the bus",         date: "1955-12-01",  cat: "culture",   vibe: 0.22, salience: 0.8 },
   { name: "the launch of Sputnik",                          date: "1957-10-04",  cat: "space",     vibe: 0.22, salience: 0.60 },
   { name: "the Cuban Missile Crisis",                       date: "1962-10-16",  cat: "politics",  vibe: 0.20, salience: 0.60 },
   { name: "the assassination of JFK",                       date: "1963-11-22",  cat: "politics",  vibe: 0.30, salience: 0.90 },
-  { name: "the first episode of Star Trek",                       date: "1966-09-08",  cat: "culture",  vibe: 0.30, salience: 0.70 },
+  { name: "the first episode of Star Trek",                 date: "1966-09-08",  cat: "culture",   vibe: 0.30, salience: 0.70 },
   { name: "the Moon landing",                               date: "1969-07-20",  cat: "space",     vibe: 0.30, salience: 0.95 },
   { name: "Woodstock",                                      date: "1969-08-15",  cat: "culture",   vibe: 0.32, salience: 0.70 },
   { name: "the Watergate break-in",                         date: "1972-06-17",  cat: "politics",  vibe: 0.22, salience: 0.55 },
   { name: "the first Star Wars film's release",             date: "1977-05-25",  cat: "culture",   vibe: 0.55, salience: 0.90 },
   { name: "the Three Mile Island accident",                 date: "1979-03-28",  cat: "disaster",  vibe: 0.15, salience: 0.30 },
-  { name: "the first McDonald's Happy Meal",                 date: "1979-06-15",  cat: "culture",  vibe: 0.15, salience: 0.40 },
-
-  // ── 1980s ──
+  { name: "the first McDonald's Happy Meal",                date: "1979-06-15",  cat: "culture",   vibe: 0.15, salience: 0.40 },
   { name: "the launch of MTV",                              date: "1981-08-01",  cat: "culture",   vibe: 0.42, salience: 0.65 },
-  { name: "the final episode of MASH",                        date: "1983-02-28",  cat: "culture",     vibe: 0.30, salience: 0.70 },
-  { name: "the release of the Apple Macintosh",                        date: "1984-02-24",  cat: "tech",     vibe: 0.30, salience: 0.70 },
+  { name: "the final episode of MASH",                      date: "1983-02-28",  cat: "culture",   vibe: 0.30, salience: 0.70 },
+  { name: "the release of the Apple Macintosh",             date: "1984-02-24",  cat: "tech",      vibe: 0.30, salience: 0.70 },
   { name: "the Challenger disaster",                        date: "1986-01-28",  cat: "space",     vibe: 0.30, salience: 0.70 },
   { name: "the Chernobyl disaster",                         date: "1986-04-26",  cat: "disaster",  vibe: 0.35, salience: 0.75 },
-  { name: "the release of We Didn't Start the Fire",        date: "1989-09-18",  cat: "culture",  vibe: 0.35, salience: 0.75 },
+  { name: "the release of We Didn't Start the Fire",        date: "1989-09-18",  cat: "culture",   vibe: 0.35, salience: 0.75 },
   { name: "the fall of the Berlin Wall",                    date: "1989-11-09",  cat: "politics",  vibe: 0.38, salience: 0.90 },
   { name: "the Tiananmen Square protests",                  date: "1989-06-04",  cat: "politics",  vibe: 0.32, salience: 0.70, plural: true },
-  { name: "the release of the Game Boy in North America",                  date: "1989-07-31",  cat: "culture",  vibe: 0.32, salience: 0.70, plural: true },
-
-  // ── 1990s ──
+  { name: "the release of the Game Boy in North America",   date: "1989-07-31",  cat: "culture",   vibe: 0.32, salience: 0.70, plural: true },
   { name: "the dissolution of the Soviet Union",            date: "1991-12-26",  cat: "politics",  vibe: 0.35, salience: 0.75 },
-  { name: "the gold medal for the Dream Team",            date: "1992-08-08",  cat: "culture",  vibe: 0.35, salience: 0.65 },
+  { name: "the gold medal for the Dream Team",              date: "1992-08-08",  cat: "culture",   vibe: 0.35, salience: 0.65 },
   { name: "the release of Jurassic Park",                   date: "1993-06-11",  cat: "culture",   vibe: 0.62, salience: 0.80 },
   { name: "the premiere of Friends",                        date: "1994-09-22",  cat: "culture",   vibe: 0.70, salience: 0.85 },
   { name: "the release of Windows 95",                      date: "1995-08-24",  cat: "tech",      vibe: 0.50, salience: 0.60 },
   { name: "the release of Toy Story",                       date: "1995-11-22",  cat: "culture",   vibe: 0.72, salience: 0.85 },
   { name: "Dolly the sheep being cloned",                   date: "1996-07-05",  cat: "science",   vibe: 0.40, salience: 0.50 },
-  { name: "the first episode of Pokemon broadcast in Japan",                  date: "1997-04-01",  cat: "culture",   vibe: 0.65, salience: 0.85 },
-  { name: "the first episode of South Park",                  date: "1997-08-13",  cat: "culture",   vibe: 0.65, salience: 0.85 },
+  { name: "the first episode of Pokemon broadcast in Japan", date: "1997-04-01", cat: "culture",   vibe: 0.65, salience: 0.85 },
+  { name: "the first episode of South Park",                date: "1997-08-13",  cat: "culture",   vibe: 0.65, salience: 0.85 },
   { name: "the funeral of Princess Diana",                  date: "1997-09-06",  cat: "culture",   vibe: 0.65, salience: 0.85 },
   { name: "the release of Titanic (film)",                  date: "1997-12-19",  cat: "culture",   vibe: 0.65, salience: 0.85 },
-  { name: "the release of The Matrix",                  date: "1999-03-31",  cat: "culture",   vibe: 0.65, salience: 0.85 },
+  { name: "the release of The Matrix",                      date: "1999-03-31",  cat: "culture",   vibe: 0.65, salience: 0.85 },
   { name: "Google's founding",                              date: "1998-09-04",  cat: "tech",      vibe: 0.60, salience: 0.80 },
-  { name: "Destiny's Child release of Say My Name",          date: "1999-10-14",  cat: "culture",      vibe: 0.60, salience: 0.80 },
-
-  // ── 2000s ──
+  { name: "Destiny's Child release of Say My Name",         date: "1999-10-14",  cat: "culture",   vibe: 0.60, salience: 0.80 },
   { name: "Y2K",                                            date: "2000-01-01",  cat: "tech",      vibe: 0.55, salience: 0.65 },
   { name: "the September 11 attacks",                       date: "2001-09-11",  cat: "disaster",  vibe: 0.70, salience: 0.98, plural: true },
-  { name: "the release of the iPod",                       date: "2001-10-01",  cat: "tech",  vibe: 0.70, salience: 0.98, plural: true },
+  { name: "the release of the iPod",                        date: "2001-10-01",  cat: "tech",      vibe: 0.70, salience: 0.98, plural: true },
   { name: "the launch of Wikipedia",                        date: "2001-01-15",  cat: "tech",      vibe: 0.55, salience: 0.60 },
   { name: "the Columbia shuttle disaster",                  date: "2003-02-01",  cat: "space",     vibe: 0.35, salience: 0.40 },
-  { name: "the U.S. invasion of Iraq",                  date: "2003-03-20",  cat: "politics",     vibe: 0.45, salience: 0.82 },
+  { name: "the U.S. invasion of Iraq",                      date: "2003-03-20",  cat: "politics",  vibe: 0.45, salience: 0.82 },
   { name: "the Indian Ocean tsunami",                       date: "2004-12-26",  cat: "disaster",  vibe: 0.45, salience: 0.70 },
-  { name: "the first episode of the US show of The Office",     date: "2005-03-24",  cat: "culture",      vibe: 0.68, salience: 0.85 },
+  { name: "the first episode of the US show of The Office", date: "2005-03-24",  cat: "culture",   vibe: 0.68, salience: 0.85 },
   { name: "the launch of YouTube",                          date: "2005-02-14",  cat: "tech",      vibe: 0.68, salience: 0.85 },
   { name: "the release of the first iPhone",                date: "2007-06-29",  cat: "tech",      vibe: 0.75, salience: 0.90 },
   { name: "the start of the 2008 financial crisis",         date: "2008-09-15",  cat: "politics",  vibe: 0.55, salience: 0.75 },
   { name: "Obama's inauguration",                           date: "2009-01-20",  cat: "politics",  vibe: 0.62, salience: 0.85 },
-
-  // ── 2010s ──
   { name: "the Deepwater Horizon oil spill",                date: "2010-04-20",  cat: "disaster",  vibe: 0.45, salience: 0.55 },
   { name: "the Arab Spring beginning",                      date: "2010-12-17",  cat: "politics",  vibe: 0.40, salience: 0.50 },
   { name: "the death of Osama bin Laden",                   date: "2011-05-02",  cat: "politics",  vibe: 0.55, salience: 0.80 },
   { name: "the release of Minecraft",                       date: "2011-11-18",  cat: "tech",      vibe: 0.78, salience: 0.80 },
   { name: "Facebook's IPO",                                 date: "2012-05-18",  cat: "tech",      vibe: 0.55, salience: 0.55 },
   { name: "the Higgs boson discovery",                      date: "2012-07-04",  cat: "science",   vibe: 0.48, salience: 0.50 },
-  { name: "the inauguration of Pope Francis",               date: "2013-03-19",  cat: "culture",  vibe: 0.6, salience: 0.45},
+  { name: "the inauguration of Pope Francis",               date: "2013-03-19",  cat: "culture",   vibe: 0.6, salience: 0.45 },
   { name: "the Snowden revelations",                        date: "2013-06-05",  cat: "politics",  vibe: 0.52, salience: 0.60, plural: true },
   { name: "the release of Frozen",                          date: "2013-11-27",  cat: "culture",   vibe: 0.75, salience: 0.80 },
-  { name: "the disappearance of Malaysia Airlines Flight 370",           date: "2014-03-08",  cat: "disaster",    vibe: 0.65, salience: 0.65 },
+  { name: "the disappearance of Malaysia Airlines Flight 370", date: "2014-03-08", cat: "disaster", vibe: 0.65, salience: 0.65 },
   { name: "the Ice Bucket Challenge going viral",           date: "2014-07-15",  cat: "social",    vibe: 0.65, salience: 0.65 },
   { name: "the Paris Climate Agreement",                    date: "2015-12-12",  cat: "politics",  vibe: 0.45, salience: 0.50 },
   { name: "the UK Brexit vote",                             date: "2016-06-23",  cat: "politics",  vibe: 0.62, salience: 0.75 },
   { name: "Trump's first inauguration",                     date: "2017-01-20",  cat: "politics",  vibe: 0.75, salience: 0.90 },
   { name: "the first photo of a black hole",                date: "2019-04-10",  cat: "science",   vibe: 0.70, salience: 0.65 },
-
-  // ── 2020s ──
   { name: "the WHO declaring COVID-19 a pandemic",          date: "2020-03-11",  cat: "disaster",  vibe: 0.88, salience: 0.98 },
   { name: "the launch of the James Webb Space Telescope",   date: "2021-12-25",  cat: "space",     vibe: 0.80, salience: 0.65 },
   { name: "the release of ChatGPT",                         date: "2022-11-30",  cat: "tech",      vibe: 0.92, salience: 0.85 },
-  { name: "the resignation of Prime Minister Liz Truss",    date: "2022-11-30",  cat: "politics",      vibe: 0.8, salience: 0.63 },
+  { name: "the resignation of Prime Minister Liz Truss",    date: "2022-11-30",  cat: "politics",  vibe: 0.8, salience: 0.63 },
 ];
 
-
 // ──────────────────────────────────────────────────────────────
-// CATEGORY DISTANCE MATRIX
-// How "far apart" two categories feel. Pairings across
-// distant categories are more surprising.
-// 1.0 = maximally different worlds
-// 0.0 = same category
+// CATEGORY DISTANCE
 // ──────────────────────────────────────────────────────────────
-const CAT_DISTANCE = {
-  // same → 0
-  // related → 0.2–0.4
-  // unrelated → 0.6–1.0
-};
-
 function catDistance(a, b) {
   if (a === b) return 0.0;
   const key = [a, b].sort().join("|");
   const map = {
-    "politics|war":      0.15,  // closely related
-    "disaster|war":      0.20,
-    "politics|disaster":  0.25,
-    "science|tech":      0.20,
-    "space|tech":        0.25,
-    "science|space":     0.20,
-    "culture|social":    0.25,
-    "politics|social":   0.30,
-    // cross-domain (the good stuff)
-    "ancient|tech":      1.00,
-    "ancient|culture":   0.95,
-    "ancient|social":    0.95,
-    "culture|war":       0.80,
-    "culture|science":   0.85,
-    "culture|space":     0.85,
-    "culture|politics":  0.70,
-    "culture|disaster":  0.75,
-    "culture|ancient":   0.95,
-    "tech|war":          0.80,
-    "tech|ancient":      1.00,
-    "tech|politics":     0.60,
-    "tech|disaster":     0.65,
-    "social|war":        0.85,
-    "social|science":    0.80,
-    "social|space":      0.85,
-    "social|ancient":    0.95,
-    "social|disaster":   0.60,
-    "social|tech":       0.40,
-    "space|war":         0.70,
-    "space|politics":    0.60,
-    "space|disaster":    0.55,
-    "space|ancient":     0.95,
-    "space|culture":     0.85,
-    "science|war":       0.75,
-    "science|politics":  0.65,
-    "science|disaster":  0.60,
-    "science|ancient":   0.90,
-    "science|culture":   0.85,
-    "disaster|ancient":  0.70,
-    "landmark|culture":  0.60,
-    "landmark|tech":     0.70,
-    "landmark|war":      0.50,
-    "landmark|politics": 0.45,
-    "landmark|science":  0.65,
-    "landmark|space":    0.70,
-    "landmark|disaster": 0.55,
-    "landmark|ancient":  0.40,
-    "landmark|social":   0.65,
+    "politics|war":0.15,"disaster|war":0.20,"politics|disaster":0.25,
+    "science|tech":0.20,"space|tech":0.25,"science|space":0.20,
+    "culture|social":0.25,"politics|social":0.30,
+    "ancient|tech":1.00,"ancient|culture":0.95,"ancient|social":0.95,
+    "culture|war":0.80,"culture|science":0.85,"culture|space":0.85,
+    "culture|politics":0.70,"culture|disaster":0.75,"culture|ancient":0.95,
+    "tech|war":0.80,"tech|ancient":1.00,"tech|politics":0.60,"tech|disaster":0.65,
+    "social|war":0.85,"social|science":0.80,"social|space":0.85,
+    "social|ancient":0.95,"social|disaster":0.60,"social|tech":0.40,
+    "space|war":0.70,"space|politics":0.60,"space|disaster":0.55,
+    "space|ancient":0.95,"space|culture":0.85,
+    "science|war":0.75,"science|politics":0.65,"science|disaster":0.60,
+    "science|ancient":0.90,"science|culture":0.85,
+    "disaster|ancient":0.70,
+    "landmark|culture":0.60,"landmark|tech":0.70,"landmark|war":0.50,
+    "landmark|politics":0.45,"landmark|science":0.65,"landmark|space":0.70,
+    "landmark|disaster":0.55,"landmark|ancient":0.40,"landmark|social":0.65,
   };
-  return map[key] ?? 0.5; // default for unlisted combos
+  return map[key] ?? 0.5;
 }
-
 
 // ──────────────────────────────────────────────────────────────
 // DATE UTILITIES
 // ──────────────────────────────────────────────────────────────
-
 const MS_PER_DAY  = 86400000;
 const MS_PER_YEAR = 365.2425 * MS_PER_DAY;
 
@@ -472,116 +613,56 @@ function fmtBarLabel(str) {
   return y < 0 ? `${Math.abs(y)} BC` : `${y}`;
 }
 
-
 // ──────────────────────────────────────────────────────────────
 // SURPRISE SCORING + GENERATION
-//
-// THE BRIMLEY LINE
-//
-// The sweet spot for surprise is when the "recent" event sits
-// at or just below the MIDPOINT between the older event and
-// today — the 44–50% zone. This is the moment where your gut
-// says "no way" and the math says "yes way."
-//
-//   position = daysToPast / (daysToPast + daysToToday)
-//
-//   0.00 = the recent event IS the older event (boring)
-//   0.25 = obviously close to the past event (boring)
-//   0.47 = BRIMLEY LINE — just barely tipped over (!!!)
-//   0.50 = exact midpoint (still great)
-//
-// A Gaussian curve centered on 0.47 creates the scoring:
-// events right at the Brimley Line score highest, events
-// far from it (0.10, 0.30) score near zero.
-//
-// On top of that: salience gate, vibe gap bonus, category
-// distance bonus. But position is KING.
 // ──────────────────────────────────────────────────────────────
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 const today     = Date.now();
-const NUM_CARDS = 8;
-
-// Minimum gap between the two events: ~4 years in days.
 const MIN_GAP_DAYS = 4 * 365;
-
-// Minimum salience for BOTH events.
 const MIN_SALIENCE = 0.25;
-
-// Brimley Line: ideal position of the recent event between
-// the older event and today. 0.47 = just barely past midpoint.
 const BRIMLEY_CENTER = 0.47;
-const BRIMLEY_SIGMA  = 0.08; // how tight the sweet spot is
+const BRIMLEY_SIGMA  = 0.08;
 
 function brimleyScore(position) {
-  // Gaussian centered on BRIMLEY_CENTER
   const delta = position - BRIMLEY_CENTER;
   return Math.exp(-(delta * delta) / (2 * BRIMLEY_SIGMA * BRIMLEY_SIGMA));
 }
 
 function scorePair(recent, older, daysToToday, daysToPast) {
-  // ── GATE: both events must be well-known ──
   const minSalience = Math.min(recent.salience, older.salience);
   if (minSalience < MIN_SALIENCE) return -1;
-
-  // ── CORE: Brimley Line position ──
-  // Where does the recent event sit between older and today?
   const position = daysToPast / (daysToPast + daysToToday);
   const brimley  = brimleyScore(position);
-
-  // ── BONUS: vibe gap (one feels recent, one feels ancient) ──
   const vibeGap = Math.max(0, recent.vibe - older.vibe);
-
-  // ── BONUS: cross-domain surprise ──
   const catDist = catDistance(recent.cat, older.cat);
-
-  // ── MULTIPLIER: average salience ──
   const avgSalience = (recent.salience + older.salience) / 2;
-
-  // Brimley score is king (0–1), boosted by salience,
-  // with vibe gap and category as tiebreakers.
-  return (brimley * 5 * avgSalience)
-       + (vibeGap * 1.5)
-       + (catDist * 1.0);
+  return (brimley * 5 * avgSalience) + (vibeGap * 1.5) + (catDist * 1.0);
 }
 
-function generate() {
-  // 1. Build ALL valid pairs and score them
-  const allPairs = [];
+// Store current card data for sharing text
+let currentCard = null;
 
+function generate() {
+  const allPairs = [];
   for (const recent of events) {
     const recentMs    = parseDate(recent.date);
     const daysToToday = daysBetween(recentMs, today);
-
     for (const older of events) {
       const olderMs = parseDate(older.date);
       if (olderMs >= recentMs) continue;
       const daysToPast = daysBetween(olderMs, recentMs);
-      if (daysToPast >= daysToToday) continue;     // not actually closer
-      if (daysToPast < MIN_GAP_DAYS) continue;     // trivially close
-
+      if (daysToPast >= daysToToday) continue;
+      if (daysToPast < MIN_GAP_DAYS) continue;
       const score = scorePair(recent, older, daysToToday, daysToPast);
-      if (score < 0) continue;                     // failed salience gate
-
+      if (score < 0) continue;
       allPairs.push({ recent, older, daysToToday, daysToPast, score });
     }
   }
-
-  // 2. Sort by score descending
   allPairs.sort((a, b) => b.score - a.score);
-
-  // 3. Pick ONE random card from the top pool
   const pool = allPairs.slice(0, Math.min(30, allPairs.length));
   const r = pool[Math.floor(Math.random() * pool.length)];
   if (!r) return;
+
+  currentCard = r;
 
   const pct = ((r.daysToPast / (r.daysToPast + r.daysToToday)) * 100).toFixed(1);
   const el = document.getElementById("card");
@@ -613,7 +694,6 @@ function generate() {
     </div>
   `;
 
-  // Animate bar after a beat
   requestAnimationFrame(() => {
     const fill = el.querySelector(".bar-fill");
     if (fill) {
@@ -622,6 +702,194 @@ function generate() {
     }
   });
 }
+
+// ──────────────────────────────────────────────────────────────
+// SHARE FUNCTIONALITY
+// ──────────────────────────────────────────────────────────────
+
+let capturedBlob = null;
+let capturedDataUrl = null;
+
+function getShareText() {
+  if (!currentCard) return "One day closer to the end.";
+  const r = currentCard;
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const verb = r.recent.plural ? "are" : "is";
+  return `${cap(r.recent.name)} ${verb} now closer to ${r.older.name} than to today.`;
+}
+
+async function captureCard() {
+  const cardEl = document.getElementById("card");
+  if (!cardEl || !cardEl.querySelector(".card")) return null;
+
+  // Create an offscreen wrapper with padding and background for a nice screenshot
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = `
+    position: fixed; left: -9999px; top: 0;
+    width: 640px; padding: 48px 48px 40px;
+    background: #0a0a0c;
+    font-family: 'DM Mono', monospace;
+    color: #e8e4dc;
+  `;
+
+  // Title
+  const title = document.createElement("div");
+  title.style.cssText = `
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.1rem; font-weight: 400;
+    color: #6b6660; text-align: center;
+    margin-bottom: 36px;
+  `;
+  title.textContent = "One day closer to the end.";
+  wrapper.appendChild(title);
+
+  // Clone the card content
+  const clone = cardEl.cloneNode(true);
+  // Make sure the bar fill is visually rendered in the clone
+  const cloneFill = clone.querySelector(".bar-fill");
+  if (cloneFill) {
+    cloneFill.style.transform = `scaleX(1)`;
+    cloneFill.style.width = cloneFill.dataset.pct + "%";
+    cloneFill.style.transition = "none";
+  }
+  // Force card visible
+  const cloneCard = clone.querySelector(".card");
+  if (cloneCard) {
+    cloneCard.style.opacity = "1";
+    cloneCard.style.animation = "none";
+  }
+  wrapper.appendChild(clone);
+
+  document.body.appendChild(wrapper);
+
+  try {
+    const canvas = await html2canvas(wrapper, {
+      backgroundColor: "#0a0a0c",
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+
+    capturedDataUrl = canvas.toDataURL("image/png");
+    capturedBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+
+    return capturedDataUrl;
+  } catch (err) {
+    console.error("Capture failed:", err);
+    return null;
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+
+async function openShare() {
+  const overlay = document.getElementById("shareOverlay");
+  const preview = document.getElementById("sharePreview");
+
+  // Show modal immediately with loading state
+  preview.innerHTML = `<div class="share-preview-loading">Capturing...</div>`;
+  overlay.classList.add("open");
+
+  // Capture the card
+  const dataUrl = await captureCard();
+  if (dataUrl) {
+    preview.innerHTML = `<img src="${dataUrl}" alt="Card preview">`;
+  } else {
+    preview.innerHTML = `<div class="share-preview-loading">Capture failed — try again</div>`;
+  }
+}
+
+function closeShare() {
+  document.getElementById("shareOverlay").classList.remove("open");
+}
+
+function closeShareOutside(e) {
+  if (e.target === e.currentTarget) closeShare();
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("shareToast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+function shareToBluesky() {
+  const text = getShareText();
+  const url = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
+  window.open(url, "_blank");
+  showToast("Opened Bluesky — paste the image from clipboard or downloads");
+  // Also try to copy image
+  tryCopyImage();
+}
+
+function shareToLinkedIn() {
+  const text = getShareText();
+  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("data:text/plain," + text)}`;
+  // LinkedIn's share URL is limited — open the feed compose instead
+  window.open(`https://www.linkedin.com/feed/?shareActive=true`, "_blank");
+  showToast("Opened LinkedIn — paste the image and text");
+  // Copy both text and image
+  tryCopyImage();
+}
+
+function shareToInstagram() {
+  // Instagram requires native app — best we can do is download
+  downloadImage();
+  showToast("Image saved — open Instagram and share from your gallery");
+}
+
+async function tryCopyImage() {
+  if (!capturedBlob) return;
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ "image/png": capturedBlob })
+    ]);
+  } catch (e) {
+    // Clipboard write not supported — that's okay
+  }
+}
+
+async function copyImage() {
+  if (!capturedBlob) {
+    showToast("No image captured yet");
+    return;
+  }
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ "image/png": capturedBlob })
+    ]);
+    showToast("Image copied to clipboard");
+  } catch (e) {
+    // Fallback: copy the share text
+    try {
+      await navigator.clipboard.writeText(getShareText());
+      showToast("Text copied — image copy not supported in this browser");
+    } catch (e2) {
+      showToast("Copy not available — try saving instead");
+    }
+  }
+}
+
+function downloadImage() {
+  if (!capturedDataUrl) {
+    showToast("No image captured yet");
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = capturedDataUrl;
+  a.download = "one-day-closer.png";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast("Image saved");
+}
+
+// ── Keyboard: Escape to close modal ──
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeShare();
+});
 
 generate();
 </script>
