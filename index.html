@@ -169,6 +169,65 @@
     border-color: var(--accent);
   }
 
+  .birthday-btn { display: none; }
+  .birthday-btn.visible { display: inline-flex; }
+
+  /* ── Birthday input ── */
+  .birthday-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1.05s both;
+  }
+
+  .birthday-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dim);
+    opacity: 0.6;
+  }
+
+  .birthday-input {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    outline: none;
+    transition: border-color 0.2s, color 0.2s;
+    color-scheme: dark;
+  }
+
+  .birthday-input:hover { border-color: #333; }
+  .birthday-input:focus { border-color: var(--accent); }
+
+  .birthday-clear {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    display: none;
+  }
+
+  .birthday-clear:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .birthday-clear.visible { display: inline-flex; }
+
   /* ── Copy image buttons ── */
   .copy-row {
     display: flex;
@@ -369,6 +428,12 @@
   <div id="card"></div>
   <div class="btn-row">
     <button class="another-btn" onclick="generate()">Another</button>
+    <button class="another-btn birthday-btn" id="birthdayBtn" onclick="generateBirthday()">Your birthday</button>
+  </div>
+  <div class="birthday-row">
+    <label class="birthday-label" for="birthdayInput">Set your birthday</label>
+    <input type="date" id="birthdayInput" class="birthday-input" min="1930-01-01" max="2010-12-31">
+    <button class="birthday-clear" id="birthdayClear" onclick="clearBirthday()" title="Clear birthday">✕</button>
   </div>
   <div class="copy-row">
     <div class="copy-row-label">Copy image for</div>
@@ -421,118 +486,119 @@
 // EVENT DATABASE
 // ──────────────────────────────────────────────────────────────
 const events = [
-  { name: "the signing of the Magna Carta",                 date: "1215-06-15",  cat: "politics",  vibe: 0.07, salience: 0.25 },
-  { name: "the fall of Constantinople",                     date: "1453-05-29",  cat: "war",       vibe: 0.05, salience: 0.20 },
-  { name: "Columbus reaching the Americas",                 date: "1492-10-12",  cat: "landmark",  vibe: 0.10, salience: 0.75 },
-  { name: "the publication of the Gutenberg Bible",         date: "1455-02-23",  cat: "tech",      vibe: 0.06, salience: 0.40 },
-  { name: "Shakespeare's birth",                            date: "1564-04-23",  cat: "culture",   vibe: 0.12, salience: 0.65 },
-  { name: "the Gunpowder Plot",                             date: "1605-11-05",  cat: "politics",  vibe: 0.08, salience: 0.30 },
-  { name: "the Great Fire of London",                       date: "1666-09-02",  cat: "disaster",  vibe: 0.07, salience: 0.30 },
-  { name: "Newton publishing the Principia",                date: "1687-07-05",  cat: "science",   vibe: 0.10, salience: 0.50 },
-  { name: "the signing of the Declaration of Independence", date: "1776-07-04",  cat: "politics",  vibe: 0.15, salience: 0.85 },
-  { name: "the storming of the Bastille",                   date: "1789-07-14",  cat: "politics",  vibe: 0.10, salience: 0.55 },
-  { name: "Mozart's death",                                 date: "1791-12-05",  cat: "culture",   vibe: 0.12, salience: 0.50 },
-  { name: "the Battle of Waterloo",                         date: "1815-06-18",  cat: "war",       vibe: 0.10, salience: 0.55 },
-  { name: "Darwin's On the Origin of Species",              date: "1859-11-24",  cat: "science",   vibe: 0.14, salience: 0.65 },
-  { name: "the abolition of slavery in the US",             date: "1865-12-06",  cat: "politics",  vibe: 0.18, salience: 0.90 },
-  { name: "the opening of the Suez Canal",                  date: "1869-11-17",  cat: "landmark",  vibe: 0.08, salience: 0.30 },
-  { name: "the invention of the telephone",                 date: "1876-03-10",  cat: "tech",      vibe: 0.14, salience: 0.65 },
-  { name: "the publication of the first Sherlock Holmes story", date: "1887-12-15", cat: "culture", vibe: 0.16, salience: 0.70 },
-  { name: "the Eiffel Tower's completion",                  date: "1889-03-31",  cat: "landmark",  vibe: 0.16, salience: 0.70 },
-  { name: "the Wright Brothers' first flight",              date: "1903-12-17",  cat: "tech",      vibe: 0.16, salience: 0.75 },
-  { name: "the Tunguska event",                             date: "1908-06-30",  cat: "space",     vibe: 0.16, salience: 0.55 },
-  { name: "the sinking of the Titanic",                     date: "1912-04-15",  cat: "disaster",  vibe: 0.25, salience: 0.95 },
-  { name: "the release of the Wizard of Oz (movie)",                       date: "1939-08-25",  cat: "culture",       vibe: 0.12, salience: 0.70 },
-  { name: "the start of World War I",                       date: "1914-07-28",  cat: "war",       vibe: 0.12, salience: 0.70 },
-  { name: "the end of World War I",                         date: "1918-11-11",  cat: "war",       vibe: 0.12, salience: 0.70 },
-  { name: "women gaining the vote in the US",               date: "1920-08-18",  cat: "politics",  vibe: 0.18, salience: 0.70 },
-  { name: "the founding of the USSR",                       date: "1922-12-30",  cat: "politics",  vibe: 0.18, salience: 0.70 },
-  { name: "the publication of Winnie The Pooh",             date: "1926-10-14",  cat: "culture",   vibe: 0.15, salience: 0.55 },
-  { name: "the discovery of penicillin",                    date: "1928-09-28",  cat: "science",   vibe: 0.15, salience: 0.55 },
-  { name: "the Black Tuesday stock market crash that began the Great Depression",   date: "1929-10-29",  cat: "business",   vibe: 0.15, salience: 0.55 },
-  { name: "the start of World War II",                      date: "1939-09-01",  cat: "war",       vibe: 0.20, salience: 0.90 },
-  { name: "the attack on Pearl Harbor",                      date: "1941-12-07",  cat: "war",       vibe: 0.20, salience: 0.90 },
-  { name: "D-Day",                                          date: "1944-06-06",  cat: "war",       vibe: 0.22, salience: 0.85 },
-  { name: "the end of World War II",                        date: "1945-09-02",  cat: "war",       vibe: 0.22, salience: 0.95 },
-  { name: "the atomic bombing of Hiroshima",                date: "1945-08-06",  cat: "war",       vibe: 0.25, salience: 0.90 },
-  { name: "the founding of NATO",                           date: "1949-04-04",  cat: "politics",  vibe: 0.15, salience: 0.35 },
-  { name: "the first use of a charge card",                 date: "1950-02-08",  cat: "culture",   vibe: 0.15, salience: 0.35 },
-  { name: "the first Formula One World Championship race",  date: "1950-05-13",  cat: "culture",   vibe: 0.15, salience: 0.35 },
-  { name: "the beginning of the Korean War",                date: "1950-06-25",  cat: "politics",  vibe: 0.15, salience: 0.45 },
-  { name: "the coronation of Queen Elizabeth II",           date: "1953-06-02",  cat: "politics",  vibe: 0.20, salience: 0.60 },
-  { name: "the climbing of Mt Everest",                     date: "1953-05-29",  cat: "culture",   vibe: 0.22, salience: 0.65 },
-  { name: "the opening of Disneyland",                      date: "1955-07-17",  cat: "culture",   vibe: 0.22, salience: 0.60 },
-  { name: "Rosa Parks refusing to move on the bus",         date: "1955-12-01",  cat: "culture",   vibe: 0.22, salience: 0.8 },
-  { name: "the launch of Sputnik",                          date: "1957-10-04",  cat: "space",     vibe: 0.22, salience: 0.60 },
-  { name: "the Cuban Missile Crisis",                       date: "1962-10-16",  cat: "politics",  vibe: 0.20, salience: 0.60 },
-  { name: "MLK Jr's I have a Dream Speech",                       date: "1963-08-28",  cat: "culture",  vibe: 0.30, salience: 0.90 },
-  { name: "the assassination of JFK",                       date: "1963-11-22",  cat: "politics",  vibe: 0.30, salience: 0.90 },
-  { name: "the first episode of Star Trek",                 date: "1966-09-08",  cat: "culture",   vibe: 0.30, salience: 0.70 },
-  { name: "the Moon landing",                               date: "1969-07-20",  cat: "space",     vibe: 0.30, salience: 0.95 },
-  { name: "Woodstock",                                      date: "1969-08-15",  cat: "culture",   vibe: 0.32, salience: 0.70 },
-  { name: "the premiere of Sesame Street",                                      date: "1969-11-03",  cat: "culture",   vibe: 0.32, salience: 0.70 },
-  { name: "the Apollo 13 crisis",                                      date: "1970-04-11",  cat: "space",   vibe: 0.32, salience: 0.70 },
-  { name: "the shootings at Kent State",                                      date: "1970-05-04",  cat: "war",   vibe: 0.32, salience: 0.70 },
-  { name: "the Watergate break-in",                         date: "1972-06-17",  cat: "politics",  vibe: 0.22, salience: 0.55 },
-  { name: "the first Star Wars film's release",             date: "1977-05-25",  cat: "culture",   vibe: 0.55, salience: 0.90 },
-  { name: "the release of YMCA by the Village People",                 date: "1978-10-17",  cat: "culture",  vibe: 0.15, salience: 0.30 },
-  { name: "the Three Mile Island accident",                 date: "1979-03-28",  cat: "disaster",  vibe: 0.15, salience: 0.30 },
-  { name: "the first McDonald's Happy Meal",                date: "1979-06-15",  cat: "culture",   vibe: 0.15, salience: 0.40 },
-  { name: "the launch of MTV",                              date: "1981-08-01",  cat: "culture",   vibe: 0.42, salience: 0.65 },
-  { name: "the final episode of MASH",                      date: "1983-02-28",  cat: "culture",   vibe: 0.30, salience: 0.70 },
-  { name: "the release of the video Thriller by Michael Jackson",                      date: "1983-12-02",  cat: "culture",   vibe: 0.30, salience: 0.70 },
-  { name: "the release of the Apple Macintosh",             date: "1984-02-24",  cat: "tech",      vibe: 0.30, salience: 0.70 },
-  { name: "the Challenger disaster",                        date: "1986-01-28",  cat: "space",     vibe: 0.30, salience: 0.70 },
-  { name: "the Chernobyl disaster",                         date: "1986-04-26",  cat: "disaster",  vibe: 0.35, salience: 0.75 },
-  { name: "the release of We Didn't Start the Fire",        date: "1989-09-18",  cat: "culture",   vibe: 0.35, salience: 0.75 },
-  { name: "the fall of the Berlin Wall",                    date: "1989-11-09",  cat: "politics",  vibe: 0.38, salience: 0.90 },
-  { name: "the Tiananmen Square protests",                  date: "1989-06-04",  cat: "politics",  vibe: 0.32, salience: 0.70, plural: true },
-  { name: "the release of the Game Boy in North America",   date: "1989-07-31",  cat: "culture",   vibe: 0.32, salience: 0.70, plural: true },
-  { name: "the dissolution of the Soviet Union",            date: "1991-12-26",  cat: "politics",  vibe: 0.35, salience: 0.75 },
-  { name: "the gold medal for the Dream Team",              date: "1992-08-08",  cat: "culture",   vibe: 0.35, salience: 0.65 },
-  { name: "the release of Jurassic Park",                   date: "1993-06-11",  cat: "culture",   vibe: 0.62, salience: 0.80 },
-  { name: "the premiere of Friends",                        date: "1994-09-22",  cat: "culture",   vibe: 0.70, salience: 0.85 },
-  { name: "the release of Windows 95",                      date: "1995-08-24",  cat: "tech",      vibe: 0.50, salience: 0.60 },
-  { name: "the release of Toy Story",                       date: "1995-11-22",  cat: "culture",   vibe: 0.72, salience: 0.85 },
-  { name: "Dolly the sheep being cloned",                   date: "1996-07-05",  cat: "science",   vibe: 0.40, salience: 0.50 },
-  { name: "the song Macarena (Bayside Boys Remix) hitting number 1 in the USA",                   date: "1996-08-03",  cat: "culture",   vibe: 0.40, salience: 0.50 },
-  { name: "the first episode of Pokemon broadcast in Japan", date: "1997-04-01", cat: "culture",   vibe: 0.65, salience: 0.85 },
-  { name: "the first episode of South Park",                date: "1997-08-13",  cat: "culture",   vibe: 0.65, salience: 0.85 },
-  { name: "the funeral of Princess Diana",                  date: "1997-09-06",  cat: "culture",   vibe: 0.65, salience: 0.85 },
-  { name: "the release of Titanic (film)",                  date: "1997-12-19",  cat: "culture",   vibe: 0.65, salience: 0.85 },
-  { name: "the release of The Matrix",                      date: "1999-03-31",  cat: "culture",   vibe: 0.65, salience: 0.85 },
-  { name: "Google's founding",                              date: "1998-09-04",  cat: "tech",      vibe: 0.60, salience: 0.80 },
-  { name: "Destiny's Child release of Say My Name",         date: "1999-10-14",  cat: "culture",   vibe: 0.60, salience: 0.80 },
-  { name: "the Supreme Court decision in Bush v Gore",      date: "2000-12-12",  cat: "politics",      vibe: 0.55, salience: 0.65 },
-  { name: "the September 11 attacks",                       date: "2001-09-11",  cat: "disaster",  vibe: 0.70, salience: 0.98, plural: true },
-  { name: "the release of the iPod",                        date: "2001-10-01",  cat: "tech",      vibe: 0.70, salience: 0.98 },
-  { name: "the launch of Wikipedia",                        date: "2001-01-15",  cat: "tech",      vibe: 0.55, salience: 0.60 },
-  { name: "the Columbia shuttle disaster",                  date: "2003-02-01",  cat: "space",     vibe: 0.35, salience: 0.40 },
-  { name: "the U.S. invasion of Iraq",                      date: "2003-03-20",  cat: "politics",  vibe: 0.45, salience: 0.82 },
-  { name: "the Indian Ocean tsunami",                       date: "2004-12-26",  cat: "disaster",  vibe: 0.45, salience: 0.70 },
-  { name: "the first episode of the US show of The Office", date: "2005-03-24",  cat: "culture",   vibe: 0.68, salience: 0.85 },
-  { name: "the launch of YouTube",                          date: "2005-02-14",  cat: "tech",      vibe: 0.68, salience: 0.85 },
-  { name: "the release of the first iPhone",                date: "2007-06-29",  cat: "tech",      vibe: 0.75, salience: 0.90 },
-  { name: "the start of the 2008 financial crisis",         date: "2008-09-15",  cat: "politics",  vibe: 0.55, salience: 0.75 },
-  { name: "Obama's inauguration",                           date: "2009-01-20",  cat: "politics",  vibe: 0.62, salience: 0.85 },
-  { name: "the Deepwater Horizon oil spill",                date: "2010-04-20",  cat: "disaster",  vibe: 0.45, salience: 0.55 },
-  { name: "the Arab Spring beginning",                      date: "2010-12-17",  cat: "politics",  vibe: 0.40, salience: 0.50 },
-  { name: "the death of Osama bin Laden",                   date: "2011-05-02",  cat: "politics",  vibe: 0.55, salience: 0.80 },
-  { name: "the release of Minecraft",                       date: "2011-11-18",  cat: "tech",      vibe: 0.78, salience: 0.80 },
-  { name: "the Higgs boson discovery",                      date: "2012-07-04",  cat: "science",   vibe: 0.48, salience: 0.50 },
-  { name: "the inauguration of Pope Francis",               date: "2013-03-19",  cat: "culture",   vibe: 0.6, salience: 0.45 },
-  { name: "the Snowden revelations",                        date: "2013-06-05",  cat: "politics",  vibe: 0.52, salience: 0.60, plural: true },
-  { name: "the release of Frozen",                          date: "2013-11-27",  cat: "culture",   vibe: 0.75, salience: 0.80 },
-  { name: "the disappearance of Malaysia Airlines Flight 370", date: "2014-03-08", cat: "disaster", vibe: 0.65, salience: 0.65 },
-  { name: "the Ice Bucket Challenge going viral",           date: "2014-07-15",  cat: "social",    vibe: 0.65, salience: 0.65 },
-  { name: "the Paris Climate Agreement",                    date: "2015-12-12",  cat: "politics",  vibe: 0.45, salience: 0.50 },
-  { name: "the UK Brexit vote",                             date: "2016-06-23",  cat: "politics",  vibe: 0.62, salience: 0.75 },
-  { name: "Trump's first inauguration",                     date: "2017-01-20",  cat: "politics",  vibe: 0.75, salience: 0.90 },
-  { name: "the first photo of a black hole",                date: "2019-04-10",  cat: "science",   vibe: 0.70, salience: 0.65 },
-  { name: "the WHO declaring COVID-19 a pandemic",          date: "2020-03-11",  cat: "disaster",  vibe: 0.88, salience: 0.98 },
-  { name: "the launch of the James Webb Space Telescope",   date: "2021-12-25",  cat: "space",     vibe: 0.80, salience: 0.65 },
-  { name: "the release of ChatGPT",                         date: "2022-11-30",  cat: "tech",      vibe: 0.92, salience: 0.85 },
-  { name: "the resignation of Prime Minister Liz Truss",    date: "2022-11-30",  cat: "politics",  vibe: 0.8, salience: 0.63 },
+  { name: "the signing of the Magna Carta",                 date: "1215-06-15",  cat: "politics",  gravity: 0.30 },
+  { name: "the fall of Constantinople",                     date: "1453-05-29",  cat: "war",       gravity: 0.12 },
+  { name: "Columbus reaching the Americas",                 date: "1492-10-12",  cat: "landmark",  gravity: 0.65 },
+  { name: "the publication of the Gutenberg Bible",         date: "1455-02-23",  cat: "tech",      gravity: 0.25 },
+  { name: "Shakespeare's birth",                            date: "1564-04-23",  cat: "culture",   gravity: 0.50 },
+  { name: "the Gunpowder Plot",                             date: "1605-11-05",  cat: "politics",  gravity: 0.12 },
+  { name: "the Great Fire of London",                       date: "1666-09-02",  cat: "disaster",  gravity: 0.15 },
+  { name: "Newton publishing the Principia",                date: "1687-07-05",  cat: "science",   gravity: 0.30 },
+  { name: "the signing of the Declaration of Independence", date: "1776-07-04",  cat: "politics",  gravity: 0.93 },
+  { name: "the storming of the Bastille",                   date: "1789-07-14",  cat: "politics",  gravity: 0.35 },
+  { name: "Mozart's death",                                 date: "1791-12-05",  cat: "culture",   gravity: 0.35 },
+  { name: "the Battle of Waterloo",                         date: "1815-06-18",  cat: "war",       gravity: 0.40 },
+  { name: "Darwin's On the Origin of Species",              date: "1859-11-24",  cat: "science",   gravity: 0.45 },
+  { name: "the abolition of slavery in the US",             date: "1865-12-06",  cat: "politics",  gravity: 0.85 },
+  { name: "the opening of the Suez Canal",                  date: "1869-11-17",  cat: "landmark",  gravity: 0.15 },
+  { name: "the invention of the telephone",                 date: "1876-03-10",  cat: "tech",      gravity: 0.50 },
+  { name: "the publication of the first Sherlock Holmes story", date: "1887-12-15", cat: "culture", gravity: 0.35 },
+  { name: "the Eiffel Tower's completion",                  date: "1889-03-31",  cat: "landmark",  gravity: 0.55 },
+  { name: "the Wright Brothers' first flight",              date: "1903-12-17",  cat: "tech",      gravity: 0.65 },
+  { name: "the Tunguska event",                             date: "1908-06-30",  cat: "space",     gravity: 0.15 },
+  { name: "the sinking of the Titanic",                     date: "1912-04-15",  cat: "disaster",  gravity: 0.85 },
+  { name: "the start of World War I",                       date: "1914-07-28",  cat: "war",       gravity: 0.70 },
+  { name: "the end of World War I",                         date: "1918-11-11",  cat: "war",       gravity: 0.65 },
+  { name: "women gaining the vote in the US",               date: "1920-08-18",  cat: "politics",  gravity: 0.60 },
+  { name: "the founding of the USSR",                       date: "1922-12-30",  cat: "politics",  gravity: 0.35 },
+  { name: "the publication of Winnie The Pooh",             date: "1926-10-14",  cat: "culture",   gravity: 0.30 },
+  { name: "the discovery of penicillin",                    date: "1928-09-28",  cat: "science",   gravity: 0.30 },
+  { name: "the Black Tuesday stock market crash that began the Great Depression", date: "1929-10-29", cat: "business", gravity: 0.55 },
+  { name: "the release of the Wizard of Oz (movie)",        date: "1939-08-25",  cat: "culture",   gravity: 0.50 },
+  { name: "the start of World War II",                      date: "1939-09-01",  cat: "war",       gravity: 0.88 },
+  { name: "the attack on Pearl Harbor",                     date: "1941-12-07",  cat: "war",       gravity: 0.85 },
+  { name: "D-Day",                                          date: "1944-06-06",  cat: "war",       gravity: 0.87 },
+  { name: "the end of World War II",                        date: "1945-09-02",  cat: "war",       gravity: 0.92 },
+  { name: "the atomic bombing of Hiroshima",                date: "1945-08-06",  cat: "war",       gravity: 0.97 },
+  { name: "the founding of NATO",                           date: "1949-04-04",  cat: "politics",  gravity: 0.15 },
+  { name: "the first use of a charge card",                 date: "1950-02-08",  cat: "culture",   gravity: 0.08 },
+  { name: "the first Formula One World Championship race",  date: "1950-05-13",  cat: "culture",   gravity: 0.12 },
+  { name: "the beginning of the Korean War",                date: "1950-06-25",  cat: "politics",  gravity: 0.30 },
+  { name: "the coronation of Queen Elizabeth II",           date: "1953-06-02",  cat: "politics",  gravity: 0.40 },
+  { name: "the climbing of Mt Everest",                     date: "1953-05-29",  cat: "culture",   gravity: 0.45 },
+  { name: "the opening of Disneyland",                      date: "1955-07-17",  cat: "culture",   gravity: 0.50 },
+  { name: "Rosa Parks refusing to move on the bus",         date: "1955-12-01",  cat: "culture",   gravity: 0.75 },
+  { name: "the launch of Sputnik",                          date: "1957-10-04",  cat: "space",     gravity: 0.45 },
+  { name: "the Cuban Missile Crisis",                       date: "1962-10-16",  cat: "politics",  gravity: 0.55 },
+  { name: "MLK Jr's I have a Dream Speech",                 date: "1963-08-28",  cat: "culture",   gravity: 0.88 },
+  { name: "the assassination of JFK",                       date: "1963-11-22",  cat: "politics",  gravity: 0.90 },
+  { name: "the first episode of Star Trek",                 date: "1966-09-08",  cat: "culture",   gravity: 0.45 },
+  { name: "the Moon landing",                               date: "1969-07-20",  cat: "space",     gravity: 0.95 },
+  { name: "Woodstock",                                      date: "1969-08-15",  cat: "culture",   gravity: 0.55 },
+  { name: "the premiere of Sesame Street",                  date: "1969-11-03",  cat: "culture",   gravity: 0.40 },
+  { name: "the Apollo 13 crisis",                           date: "1970-04-11",  cat: "space",     gravity: 0.45 },
+  { name: "the shootings at Kent State",                    date: "1970-05-04",  cat: "war",       gravity: 0.35, plural: true },
+  { name: "the Watergate break-in",                         date: "1972-06-17",  cat: "politics",  gravity: 0.50 },
+  { name: "the first Star Wars film's release",             date: "1977-05-25",  cat: "culture",   gravity: 0.70 },
+  { name: "the release of YMCA by the Village People",      date: "1978-10-17",  cat: "culture",   gravity: 0.30 },
+  { name: "the Three Mile Island accident",                 date: "1979-03-28",  cat: "disaster",  gravity: 0.18 },
+  { name: "the first McDonald's Happy Meal",                date: "1979-06-15",  cat: "culture",   gravity: 0.15 },
+  { name: "the launch of MTV",                              date: "1981-08-01",  cat: "culture",   gravity: 0.45 },
+  { name: "the final episode of MASH",                      date: "1983-02-28",  cat: "culture",   gravity: 0.35 },
+  { name: "the release of the video Thriller by Michael Jackson", date: "1983-12-02", cat: "culture", gravity: 0.55 },
+  { name: "the release of the Apple Macintosh",             date: "1984-02-24",  cat: "tech",      gravity: 0.40 },
+  { name: "the release of Where in the World Is Carmen Sandiego? (video game)", date: "1985-04-23", cat: "culture", gravity: 0.35 },
+  { name: "the Challenger disaster",                        date: "1986-01-28",  cat: "space",     gravity: 0.70 },
+  { name: "the Chernobyl disaster",                         date: "1986-04-26",  cat: "disaster",  gravity: 0.65 },
+  { name: "the release of We Didn't Start the Fire",        date: "1989-09-18",  cat: "culture",   gravity: 0.30 },
+  { name: "the fall of the Berlin Wall",                    date: "1989-11-09",  cat: "politics",  gravity: 0.88 },
+  { name: "the Tiananmen Square protests",                  date: "1989-06-04",  cat: "politics",  gravity: 0.60, plural: true },
+  { name: "the release of the Game Boy in North America",   date: "1989-07-31",  cat: "culture",   gravity: 0.35 },
+  { name: "the dissolution of the Soviet Union",            date: "1991-12-26",  cat: "politics",  gravity: 0.65 },
+  { name: "the Dream Team winning an Olympic gold medal",              date: "1992-08-08",  cat: "culture",   gravity: 0.30 },
+  { name: "the release of Jurassic Park",                   date: "1993-06-11",  cat: "culture",   gravity: 0.50 },
+  { name: "the premiere of Friends",                        date: "1994-09-22",  cat: "culture",   gravity: 0.40 },
+  { name: "the release of Windows 95",                      date: "1995-08-24",  cat: "tech",      gravity: 0.35 },
+  { name: "the release of Toy Story",                       date: "1995-11-22",  cat: "culture",   gravity: 0.35 },
+  { name: "Dolly the sheep being cloned",                   date: "1996-07-05",  cat: "science",   gravity: 0.30 },
+  { name: "the song Macarena (Bayside Boys Remix) hitting number 1 in the USA", date: "1996-08-03", cat: "culture", gravity: 0.40 },
+  { name: "the first episode of Pokemon broadcast in Japan", date: "1997-04-01", cat: "culture",   gravity: 0.40 },
+  { name: "the first episode of South Park",                date: "1997-08-13",  cat: "culture",   gravity: 0.35 },
+  { name: "the funeral of Princess Diana",                  date: "1997-09-06",  cat: "culture",   gravity: 0.70 },
+  { name: "the release of Titanic (film)",                  date: "1997-12-19",  cat: "culture",   gravity: 0.60 },
+  { name: "Google's founding",                              date: "1998-09-04",  cat: "tech",      gravity: 0.55 },
+  { name: "the release of The Matrix",                      date: "1999-03-31",  cat: "culture",   gravity: 0.45 },
+  { name: "Destiny's Child release of Say My Name",         date: "1999-10-14",  cat: "culture",   gravity: 0.25 },
+  { name: "the Supreme Court decision in Bush v Gore",      date: "2000-12-12",  cat: "politics",  gravity: 0.45 },
+  { name: "the launch of Wikipedia",                        date: "2001-01-15",  cat: "tech",      gravity: 0.30 },
+  { name: "the September 11 attacks",                       date: "2001-09-11",  cat: "disaster",  gravity: 0.98, plural: true },
+  { name: "the release of the iPod",                        date: "2001-10-01",  cat: "tech",      gravity: 0.45 },
+  { name: "the Columbia shuttle disaster",                  date: "2003-02-01",  cat: "space",     gravity: 0.30 },
+  { name: "the U.S. invasion of Iraq",                      date: "2003-03-20",  cat: "politics",  gravity: 0.65 },
+  { name: "the Indian Ocean tsunami",                       date: "2004-12-26",  cat: "disaster",  gravity: 0.45 },
+  { name: "the launch of YouTube",                          date: "2005-02-14",  cat: "tech",      gravity: 0.45 },
+  { name: "the first episode of the US show of The Office", date: "2005-03-24",  cat: "culture",   gravity: 0.40 },
+  { name: "the release of the first iPhone",                date: "2007-06-29",  cat: "tech",      gravity: 0.65 },
+  { name: "the start of the 2008 financial crisis",         date: "2008-09-15",  cat: "politics",  gravity: 0.60 },
+  { name: "Obama's inauguration",                           date: "2009-01-20",  cat: "politics",  gravity: 0.70 },
+  { name: "the Deepwater Horizon oil spill",                date: "2010-04-20",  cat: "disaster",  gravity: 0.30 },
+  { name: "the Arab Spring beginning",                      date: "2010-12-17",  cat: "politics",  gravity: 0.25 },
+  { name: "the death of Osama bin Laden",                   date: "2011-05-02",  cat: "politics",  gravity: 0.60 },
+  { name: "the release of Minecraft",                       date: "2011-11-18",  cat: "tech",      gravity: 0.35 },
+  { name: "the Higgs boson discovery",                      date: "2012-07-04",  cat: "science",   gravity: 0.20 },
+  { name: "the inauguration of Pope Francis",               date: "2013-03-19",  cat: "culture",   gravity: 0.25 },
+  { name: "the Snowden revelations",                        date: "2013-06-05",  cat: "politics",  gravity: 0.35, plural: true },
+  { name: "the release of Frozen",                          date: "2013-11-27",  cat: "culture",   gravity: 0.40 },
+  { name: "the disappearance of Malaysia Airlines Flight 370", date: "2014-03-08", cat: "disaster", gravity: 0.40 },
+  { name: "the Ice Bucket Challenge going viral",           date: "2014-07-15",  cat: "social",    gravity: 0.25 },
+  { name: "the Paris Climate Agreement",                    date: "2015-12-12",  cat: "politics",  gravity: 0.20 },
+  { name: "the UK Brexit vote",                             date: "2016-06-23",  cat: "politics",  gravity: 0.50 },
+  { name: "Trump's first inauguration",                     date: "2017-01-20",  cat: "politics",  gravity: 0.70 },
+  { name: "the first photo of a black hole",                date: "2019-04-10",  cat: "science",   gravity: 0.35 },
+  { name: "the WHO declaring COVID-19 a pandemic",          date: "2020-03-11",  cat: "disaster",  gravity: 0.95 },
+  { name: "the launch of the James Webb Space Telescope",   date: "2021-12-25",  cat: "space",     gravity: 0.30 },
+  { name: "the release of ChatGPT",                         date: "2022-11-30",  cat: "tech",      gravity: 0.55 },
+  { name: "the resignation of Prime Minister Liz Truss",    date: "2022-11-30",  cat: "politics",  gravity: 0.30 },
 ];
 
 // ──────────────────────────────────────────────────────────────
@@ -617,7 +683,7 @@ function fmtBarLabel(str) {
 // ──────────────────────────────────────────────────────────────
 const today     = Date.now();
 const MIN_GAP_DAYS = 4 * 365;
-const MIN_SALIENCE = 0.25;
+const MIN_POSITION = 0.35;
 const BRIMLEY_CENTER = 0.47;
 const BRIMLEY_SIGMA  = 0.08;
 
@@ -626,50 +692,21 @@ function brimleyScore(position) {
   return Math.exp(-(delta * delta) / (2 * BRIMLEY_SIGMA * BRIMLEY_SIGMA));
 }
 
+const GRAVITY_WEIGHT = 0.15;
+
 function scorePair(recent, older, daysToToday, daysToPast) {
-  const minSalience = Math.min(recent.salience, older.salience);
-  if (minSalience < MIN_SALIENCE) return -1;
   const position = daysToPast / (daysToPast + daysToToday);
-  const brimley  = brimleyScore(position);
-  const vibeGap = Math.max(0, recent.vibe - older.vibe);
-  const avgSalience = (recent.salience + older.salience) / 2;
-  return (brimley * 5 * avgSalience) + (vibeGap * 1.5);
+  const brimley = brimleyScore(position);
+  const gravityBonus = Math.max(0, (older.gravity || 0) - (recent.gravity || 0));
+  return brimley + GRAVITY_WEIGHT * gravityBonus;
 }
 
 const recentHistory = [];
 const HISTORY_SIZE = 15;
 let currentCard = null;
+let birthdayEvent = null;
 
-function generate() {
-  const allPairs = [];
-  for (const recent of events) {
-    const recentMs    = parseDate(recent.date);
-    const daysToToday = daysBetween(recentMs, today);
-    for (const older of events) {
-      const olderMs = parseDate(older.date);
-      if (olderMs >= recentMs) continue;
-      const daysToPast = daysBetween(olderMs, recentMs);
-      if (daysToPast >= daysToToday) continue;
-      if (daysToPast < MIN_GAP_DAYS) continue;
-      const score = scorePair(recent, older, daysToToday, daysToPast);
-      if (score < 0) continue;
-      allPairs.push({ recent, older, daysToToday, daysToPast, score });
-    }
-  }
-  allPairs.sort((a, b) => b.score - a.score);
-  const pool = allPairs.slice(0, Math.min(50, allPairs.length));
-
-  // Filter out recently shown pairs
-  const pairKey = p => p.recent.name + '|' + p.older.name;
-  let available = pool.filter(p => !recentHistory.includes(pairKey(p)));
-  if (available.length === 0) available = pool; // safety fallback
-
-  const r = available[Math.floor(Math.random() * available.length)];
-  if (!r) return;
-
-  recentHistory.push(pairKey(r));
-  if (recentHistory.length > HISTORY_SIZE) recentHistory.shift();
-
+function renderCard(r) {
   currentCard = r;
 
   const pct = ((r.daysToPast / (r.daysToPast + r.daysToToday)) * 100).toFixed(1);
@@ -685,7 +722,7 @@ function generate() {
         <span class="closer-to"> than to today.</span>
       </div>
       <div class="card-dates">
-        ${fmtDate(r.older.date)} &#8594; <strong style="color:var(--fg)">${fmtDate(r.recent.date)}</strong> &#8594; Today
+        <span style="color:var(--accent)">${fmtDate(r.older.date)}</span> &#8594; <strong style="color:var(--fg)">${fmtDate(r.recent.date)}</strong> &#8594; Today
       </div>
       <div class="bar-container">
         <span class="bar-label">${fmtBarLabel(r.older.date)}</span>
@@ -702,7 +739,6 @@ function generate() {
     </div>
   `;
 
-  // Reset copied state on all buttons
   document.querySelectorAll('.copy-btn').forEach(b => b.classList.remove('copied'));
 
   requestAnimationFrame(() => {
@@ -712,6 +748,39 @@ function generate() {
       fill.classList.add("animate");
     }
   });
+}
+
+function generate() {
+  const allPairs = [];
+  for (const recent of events) {
+    const recentMs    = parseDate(recent.date);
+    const daysToToday = daysBetween(recentMs, today);
+    for (const older of events) {
+      const olderMs = parseDate(older.date);
+      if (olderMs >= recentMs) continue;
+      const daysToPast = daysBetween(olderMs, recentMs);
+      if (daysToPast >= daysToToday) continue;
+      if (daysToPast < MIN_GAP_DAYS) continue;
+      const position = daysToPast / (daysToPast + daysToToday);
+      if (position < MIN_POSITION) continue;
+      const score = scorePair(recent, older, daysToToday, daysToPast);
+      allPairs.push({ recent, older, daysToToday, daysToPast, score });
+    }
+  }
+  allPairs.sort((a, b) => b.score - a.score);
+  const pool = allPairs.slice(0, Math.min(50, allPairs.length));
+
+  const pairKey = p => p.recent.name + '|' + p.older.name;
+  let available = pool.filter(p => !recentHistory.includes(pairKey(p)));
+  if (available.length === 0) available = pool;
+
+  const r = available[Math.floor(Math.random() * available.length)];
+  if (!r) return;
+
+  recentHistory.push(pairKey(r));
+  if (recentHistory.length > HISTORY_SIZE) recentHistory.shift();
+
+  renderCard(r);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -857,7 +926,7 @@ async function captureCard(W, H) {
   y = Math.round(barZoneY - metaSize * 2.5);
   ctx.textAlign = "center";
   const dSegs = [
-    { text: fmtDate(r.older.date) + "  →  ", color: DIM },
+    { text: fmtDate(r.older.date) + "  →  ", color: ACCENT },
     { text: fmtDate(r.recent.date), color: FG },
     { text: "  →  Today", color: DIM },
   ];
@@ -1005,6 +1074,86 @@ function shareToLinkedIn() {
   }).catch(() => {
     showToast("LinkedIn opened — add your caption there");
   });
+}
+
+// ──────────────────────────────────────────────────────────────
+// BIRTHDAY INPUT
+// ──────────────────────────────────────────────────────────────
+
+const birthdayInput = document.getElementById("birthdayInput");
+const birthdayClearBtn = document.getElementById("birthdayClear");
+const birthdayBtn = document.getElementById("birthdayBtn");
+
+function updateBirthdayUI() {
+  if (birthdayEvent) {
+    birthdayClearBtn.classList.add("visible");
+    birthdayBtn.classList.add("visible");
+  } else {
+    birthdayClearBtn.classList.remove("visible");
+    birthdayBtn.classList.remove("visible");
+  }
+}
+
+// Restore from localStorage if available
+const savedBirthday = localStorage.getItem("userBirthday");
+if (savedBirthday) {
+  birthdayInput.value = savedBirthday;
+  birthdayEvent = { name: "your birthday", date: savedBirthday, cat: "culture", gravity: 0.10 };
+}
+updateBirthdayUI();
+
+birthdayInput.addEventListener("change", () => {
+  const val = birthdayInput.value;
+  if (val) {
+    birthdayEvent = { name: "your birthday", date: val, cat: "culture", gravity: 0.10 };
+    localStorage.setItem("userBirthday", val);
+    updateBirthdayUI();
+    generateBirthday();
+  }
+});
+
+function clearBirthday() {
+  birthdayEvent = null;
+  birthdayInput.value = "";
+  localStorage.removeItem("userBirthday");
+  updateBirthdayUI();
+  recentHistory.length = 0;
+  generate();
+}
+
+function generateBirthday() {
+  if (!birthdayEvent) return;
+  const bdMs = parseDate(birthdayEvent.date);
+  const daysToToday = daysBetween(bdMs, today);
+
+  const candidates = [];
+  for (const older of events) {
+    const olderMs = parseDate(older.date);
+    if (olderMs >= bdMs) continue;
+    const daysToPast = daysBetween(olderMs, bdMs);
+    if (daysToPast >= daysToToday) continue;
+    if (daysToPast < MIN_GAP_DAYS) continue;
+    const position = daysToPast / (daysToPast + daysToToday);
+    if (position < MIN_POSITION) continue;
+    const score = scorePair(birthdayEvent, older, daysToToday, daysToPast);
+    candidates.push({ recent: birthdayEvent, older, daysToToday, daysToPast, score });
+  }
+  if (candidates.length === 0) return;
+
+  candidates.sort((a, b) => b.score - a.score);
+  const pool = candidates.slice(0, Math.min(20, candidates.length));
+
+  const pairKey = p => p.recent.name + '|' + p.older.name;
+  let available = pool.filter(p => !recentHistory.includes(pairKey(p)));
+  if (available.length === 0) available = pool;
+
+  const r = available[Math.floor(Math.random() * available.length)];
+  if (!r) return;
+
+  recentHistory.push(pairKey(r));
+  if (recentHistory.length > HISTORY_SIZE) recentHistory.shift();
+
+  renderCard(r);
 }
 
 generate();
