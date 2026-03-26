@@ -823,7 +823,7 @@ async function captureCard(W, H) {
   const isWide   = aspect > 1.5;
 
   const S = W / 1200;
-  const textBoost = isSquare ? 1.65 : isWide ? 1.0 : 1.1;
+  const textBoost = isSquare ? 2.2 : isWide ? 1.0 : 1.1;
 
   // ── Background ──
   ctx.fillStyle = BG;
@@ -846,13 +846,13 @@ async function captureCard(W, H) {
   const CX = W / 2;
 
   const titleY    = Math.round(H * (isSquare ? 0.15 : 0.14));
-  const mainTop   = H * (isSquare ? 0.26 : 0.28);
-  const mainZone  = H * (isSquare ? 0.42 : 0.32);
-  const barZoneY  = H * (isSquare ? 0.75 : 0.68);
+  const mainTop   = H * (isSquare ? 0.18 : 0.28);
+  const mainZone  = H * (isSquare ? 0.50 : 0.32);
+  const barZoneY  = H * (isSquare ? 0.80 : 0.68);
   const wmY       = H - Math.round((isSquare ? 48 : 32) * S);
 
   // ── Title ──
-  const titleSize = Math.round(28 * S * textBoost);
+const titleSize = Math.round(28 * S * (isSquare ? 1.3 : textBoost));
   let y = titleY;
   ctx.font = `400 ${titleSize}px ${SERIF}`;
   ctx.fillStyle = DIM;
