@@ -245,7 +245,7 @@ function renderCard(r) {
         <span class="closer-to"> than to today.</span>
       </div>
       <div class="card-dates">
-        <span style="color:var(--accent)">${fmtDate(r.older.date)}</span> &#8594; <strong style="color:var(--fg)">${fmtDate(r.recent.date)}</strong> &#8594; Today
+        <span style="color:var(--accent)">${fmtDate(r.older.date)}</span> &#8594; <strong style="color:var(--fg)">${r.recent === birthdayEvent ? 'Your birthday' : fmtDate(r.recent.date)}</strong> &#8594; Today
       </div>
       <div class="bar-container">
         <span class="bar-label">${fmtBarLabel(r.older.date)}</span>
@@ -454,7 +454,7 @@ async function captureCard(W, H) {
     ctx.textAlign = "center";
     const dSegs = [
       { text: fmtDate(r.older.date) + "  →  ", color: ACCENT },
-      { text: fmtDate(r.recent.date), color: FG },
+{ text: r.recent === birthdayEvent ? "Your birthday" : fmtDate(r.recent.date), color: FG },
       { text: "  →  Today", color: DIM },
     ];
     drawSegments(dSegs, CX, y, metaFont, "center");
