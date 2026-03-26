@@ -927,71 +927,76 @@ const titleSize = Math.round(28 * S * (isSquare ? 1.3 : textBoost));
     startY += mainLineH;
   }
 
-  // ── Date line ──
-  const metaSize = Math.round(16 * S * textBoost);
-  const metaFont = `300 ${metaSize}px ${MONO}`;
-  y = Math.round(barZoneY - metaSize * 2.5);
-  ctx.textAlign = "center";
-  const dSegs = [
-    { text: fmtDate(r.older.date) + "  →  ", color: ACCENT },
-    { text: fmtDate(r.recent.date), color: FG },
-    { text: "  →  Today", color: DIM },
-  ];
-  drawSegments(dSegs, CX, y, metaFont, "center");
+// end of the main text rendering above...
 
-  // ── Progress bar ──
-  y = Math.round(barZoneY);
-  const barInset = Math.round(60 * S);
-  const barX = PAD + barInset;
-  const barW = W - PAD * 2 - barInset * 2;
-  const barH = Math.round((isSquare ? 12 : 10) * S);
-  const barR = Math.round(barH / 2);
-  const pct = r.daysToPast / (r.daysToPast + r.daysToToday);
+  if (!isSquare) {
+    // ── Date line ──
+    const metaSize = Math.round(16 * S * textBoost);
+    const metaFont = `300 ${metaSize}px ${MONO}`;
+    y = Math.round(barZoneY - metaSize * 2.5);
+    ctx.textAlign = "center";
+    const dSegs = [
+      { text: fmtDate(r.older.date) + "  →  ", color: ACCENT },
+      { text: fmtDate(r.recent.date), color: FG },
+      { text: "  →  Today", color: DIM },
+    ];
+    drawSegments(dSegs, CX, y, metaFont, "center");
 
-  ctx.fillStyle = TRACK;
-  ctx.beginPath();
-  ctx.roundRect(barX, y - barH / 2, barW, barH, barR);
-  ctx.fill();
+    // ── Progress bar ──
+    y = Math.round(barZoneY);
+    const barInset = Math.round(60 * S);
+    const barX = PAD + barInset;
+    const barW = W - PAD * 2 - barInset * 2;
+    const barH = Math.round((isSquare ? 12 : 10) * S);
+    const barR = Math.round(barH / 2);
+    const pct = r.daysToPast / (r.daysToPast + r.daysToToday);
 
-  const grad = ctx.createLinearGradient(barX, 0, barX + barW * pct, 0);
-  grad.addColorStop(0, ACCENT);
-  grad.addColorStop(1, ACCENT2);
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(barX, y - barH / 2, barW * pct, barH, barR);
-  ctx.fill();
+    ctx.fillStyle = TRACK;
+    ctx.beginPath();
+    ctx.roundRect(barX, y - barH / 2, barW, barH, barR);
+    ctx.fill();
 
-  const midX = barX + barW * 0.5;
-  ctx.strokeStyle = DIM;
-  ctx.globalAlpha = 0.4;
-  ctx.lineWidth = 1;
-  const tickH = Math.round(14 * S);
-  ctx.beginPath();
-  ctx.moveTo(midX, y - tickH);
-  ctx.lineTo(midX, y + tickH);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
+    const grad = ctx.createLinearGradient(barX, 0, barX + barW * pct, 0);
+    grad.addColorStop(0, ACCENT);
+    grad.addColorStop(1, ACCENT2);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(barX, y - barH / 2, barW * pct, barH, barR);
+    ctx.fill();
 
-  const labelSize = Math.round(14 * S * textBoost);
-  ctx.font = `300 ${labelSize}px ${MONO}`;
-  ctx.textAlign = "center";
-  ctx.fillStyle = DIM;
-  ctx.fillText(fmtBarLabel(r.older.date), PAD + Math.round(28 * S), y + Math.round(5 * S));
-  ctx.fillStyle = ACCENT;
-  ctx.fillText("Now", W - PAD - Math.round(28 * S), y + Math.round(5 * S));
+    const midX = barX + barW * 0.5;
+    ctx.strokeStyle = DIM;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1;
+    const tickH = Math.round(14 * S);
+    ctx.beginPath();
+    ctx.moveTo(midX, y - tickH);
+    ctx.lineTo(midX, y + tickH);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
 
-  // ── Gap durations ──
-  const gapY = y + Math.round((isSquare ? 48 : 40) * S);
-  ctx.font = `300 ${labelSize}px ${MONO}`;
-  ctx.textAlign = "left";
-  ctx.fillStyle = DIM;
-  ctx.fillText(`${fmtDuration(r.daysToPast)} to past event`, PAD + Math.round(10 * S), gapY);
-  ctx.textAlign = "right";
-  ctx.fillStyle = ACCENT;
-  ctx.globalAlpha = 0.7;
-  ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - Math.round(10 * S), gapY);
-  ctx.globalAlpha = 1;
+    const labelSize = Math.round(14 * S * textBoost);
+    ctx.font = `300 ${labelSize}px ${MONO}`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = DIM;
+    ctx.fillText(fmtBarLabel(r.older.date), PAD + Math.round(28 * S), y + Math.round(5 * S));
+    ctx.fillStyle = ACCENT;
+    ctx.fillText("Now", W - PAD - Math.round(28 * S), y + Math.round(5 * S));
 
+    // ── Gap durations ──
+    const gapY = y + Math.round((isSquare ? 48 : 40) * S);
+    ctx.font = `300 ${labelSize}px ${MONO}`;
+    ctx.textAlign = "left";
+    ctx.fillStyle = DIM;
+    ctx.fillText(`${fmtDuration(r.daysToPast)} to past event`, PAD + Math.round(10 * S), gapY);
+    ctx.textAlign = "right";
+    ctx.fillStyle = ACCENT;
+    ctx.globalAlpha = 0.7;
+    ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - Math.round(10 * S), gapY);
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Watermark ──
   // ── Watermark ──
   ctx.font = `300 ${labelSize}px ${MONO}`;
   ctx.textAlign = "center";
