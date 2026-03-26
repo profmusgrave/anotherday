@@ -929,6 +929,8 @@ const titleSize = Math.round(28 * S * (isSquare ? 1.3 : textBoost));
 
 // end of the main text rendering above...
 
+  const labelSize = Math.round(14 * S * textBoost);
+
   if (!isSquare) {
     // ── Date line ──
     const metaSize = Math.round(16 * S * textBoost);
@@ -975,7 +977,6 @@ const titleSize = Math.round(28 * S * (isSquare ? 1.3 : textBoost));
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    const labelSize = Math.round(14 * S * textBoost);
     ctx.font = `300 ${labelSize}px ${MONO}`;
     ctx.textAlign = "center";
     ctx.fillStyle = DIM;
@@ -995,7 +996,6 @@ const titleSize = Math.round(28 * S * (isSquare ? 1.3 : textBoost));
     ctx.fillText(`${fmtDuration(r.daysToToday)} to today`, W - PAD - Math.round(10 * S), gapY);
     ctx.globalAlpha = 1;
   }
-
   // ── Watermark ──
   // ── Watermark ──
   ctx.font = `300 ${labelSize}px ${MONO}`;
