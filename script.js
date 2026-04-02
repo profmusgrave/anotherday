@@ -83,6 +83,7 @@ const events = [
   { name: "the release of Toy Story",                       date: "1995-11-22",  cat: "culture",   gravity: 0.35 },
   { name: "Dolly the sheep being cloned",                   date: "1996-07-05",  cat: "science",   gravity: 0.30 },
   { name: "the song Macarena (Bayside Boys Remix) hitting number 1 in the USA", date: "1996-08-03", cat: "culture", gravity: 0.40 },
+  { name: "the release of Microsoft Outlook", date: "1997-01-16", cat: "tech",   gravity: 0.33 },
   { name: "the first episode of Pokemon broadcast in Japan", date: "1997-04-01", cat: "culture",   gravity: 0.40 },
   { name: "the first episode of South Park",                date: "1997-08-13",  cat: "culture",   gravity: 0.35 },
   { name: "the funeral of Princess Diana",                  date: "1997-09-06",  cat: "culture",   gravity: 0.70 },
